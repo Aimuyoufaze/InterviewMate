@@ -132,7 +132,7 @@ bash start.sh
 下次想再用，只需要：
 
 ```bash
-cd ~/Desktop/小右的工作区/InterviewMate
+cd ~/Desktop/InterviewMate
 bash start.sh
 ```
 
