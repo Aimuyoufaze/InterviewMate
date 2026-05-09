@@ -1,153 +1,208 @@
-# Interview Mate 🎙️
+# 🎙️ Interview Mate
 
-AI Agent 模拟面试平台——为申请研究生项目的学生设计。支持**真实导师蒸馏**：输入姓名即可自动搜索论文 + 公开信息，用 AI 生成专属面试官。
+**AI 模拟面试平台** —— 专为考研/保研/留学面试准备设计。
 
-## 快速启动
+支持输入导师姓名，自动搜索论文和公开信息，生成专属面试官，进行模拟面试。
 
-### 前置条件
+---
 
-- Python 3.10+
-- DeepSeek API Key（[点此获取](https://platform.deepseek.com)）
+## 📦 快速上手（写给第一次用的人）
 
-### 1. 克隆项目
+> 下面每一步都有详细说明，跟着做就行。
+
+### 你需要准备什么？
+
+1. **一台电脑**（Windows / macOS / Linux 都可以）
+2. **Python 3.10 或更高版本**
+   - 不知道有没有 Python？打开终端（Terminal），输入 `python3 --version` 回车
+   - 如果显示 `Python 3.xx` 就说明有了
+   - 没有的话去 https://python.org 下载安装
+3. **DeepSeek API Key（免费的）**
+   - 访问 https://platform.deepseek.com 注册账号
+   - 登录后点左边「API Keys」→ 创建 Key → 复制（以 `sk-` 开头）
+   - 记下来，等下要用
+
+---
+
+### 第 1 步：下载这个项目
+
+打开终端（Terminal），粘贴下面这行，回车：
 
 ```bash
 git clone https://github.com/aimuyoufaze/InterviewMate.git
 cd InterviewMate
 ```
 
-### 2. 配置后端
+> 💡 这行命令会把整个项目下载到你电脑上，然后进入项目文件夹。
+
+---
+
+### 第 2 步：配置 API Key
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-编辑 `.env`，填入你的 DeepSeek API Key：
+> 💡 这行命令创建了一个配置文件 `.env`。
 
-```
-DEEPSEEK_API_KEY=sk-your-key-here
-DEEPSEEK_BASE_URL=https://api.deepseek.com
+现在编辑这个 `.env` 文件。用下面的命令直接写入你的 Key：
+
+```bash
+echo "DEEPSEEK_API_KEY=这里填你的Key" > .env
+echo "DEEPSEEK_BASE_URL=https://api.deepseek.com" >> .env
 ```
 
-创建虚拟环境并安装依赖：
+> ⚠️ 把 `这里填你的Key` 替换成刚才复制的 Key（比如 `sk-1234567890abcdef`）
+>
+> ✅ 完成后可以用 `cat .env` 查看一下，应该显示：
+> ```
+> DEEPSEEK_API_KEY=sk-你刚才复制的key
+> DEEPSEEK_BASE_URL=https://api.deepseek.com
+> ```
+
+---
+
+### 第 3 步：安装依赖
+
+还是在 `backend` 文件夹里，继续执行：
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate      # macOS / Linux
-# 或 .venv\Scripts\activate    # Windows
+```
+
+> 💡 创建一个独立的 Python 环境，不影响你电脑上其他程序。
+
+```bash
+source .venv/bin/activate
+```
+
+> 💡 激活这个环境。Windows 用户请执行 `.venv\Scripts\activate`
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. 启动
+> 💡 安装本项目需要的 Python 包。可能需要几十秒，耐心等。
 
-**方式一：一键启动**
+---
+
+### 第 4 步：启动项目
+
+回到项目根目录：
 
 ```bash
-# 回到项目根目录
 cd ..
+```
+
+一键启动：
+
+```bash
 bash start.sh
 ```
 
-**方式二：分步启动**
+看到下面这样的输出就说明成功了：
 
-终端 1 — 启动后端（端口 8000）：
-
-```bash
-cd backend
-.venv/bin/python main.py
 ```
+🚀 启动 Interview Mate...
+📡 启动后端 (port 8000)...
+🌐 启动前端 (port 8080)...
 
-终端 2 — 启动前端（端口 8080）：
-
-```bash
-cd frontend
-python3 -m http.server 8080
+✅ 一切就绪！
+   前端: http://localhost:8080
+   后端: http://localhost:8000
 ```
-
-### 4. 打开浏览器
-
-访问 **http://localhost:8080**
 
 ---
 
-## 功能
+### 第 5 步：打开使用
 
-| 功能 | 说明 |
+1. 打开浏览器（Chrome / Safari / Edge 都可以）
+2. 地址栏输入 `http://localhost:8080`
+3. 按 **回车**
+
+你会看到 Interview Mate 的界面 🎉
+
+---
+
+### 怎么停止？
+
+回到终端，按 **`Ctrl + C`**（两个键同时按）。
+
+下次想再用，只需要：
+
+```bash
+cd ~/Desktop/小右的工作区/InterviewMate
+bash start.sh
+```
+
+---
+
+### 遇到问题怎么办？
+
+| 问题 | 解决方法 |
+|------|---------|
+| `Address already in use` | 上次没关干净，执行 `lsof -ti:8000 -ti:8080 \| xargs kill -9` 再重新启动 |
+| `DEEPSEEK_API_KEY not set` | 忘了配置 `.env`，回到第 2 步 |
+| `command not found: python3` | 没有安装 Python，去 https://python.org 下载 |
+| 界面打不开 | 确认启动成功后有 `http://localhost:8080` 的提示，地址栏别输错了 |
+
+---
+
+## 🔧 了解更多
+
+### 4 种通用面试官
+
+| 类型 | 说明 |
 |------|------|
-| 🎭 **4 种通用面试官** | 严厉型 / 温和型 / 追问型 / 苏格拉底型 |
-| 🎓 **导师蒸馏** | 输入导师姓名和机构，自动搜索 ArXiv 论文 + 网络公开信息，用 AI 生成真实画像 |
-| 💬 **多轮面试模拟** | 基于 DeepSeek 的实时对话 |
-| 📊 **自动反馈报告** | 面试结束后生成专业评估和改进建议 |
-| 💾 **导师永久留存** | 蒸馏后的导师存入 SQLite，重启不丢 |
-| 🗑️ **导师管理** | 可查看详情或删除不需要的导师 |
+| 😤 严厉型 | 严格追问细节，不容易给好评 |
+| 😊 温和型 | 鼓励式引导，会给提示 |
+| 🔍 追问型 | 连环追问，测试知识深度 |
+| 🧠 苏格拉底型 | 通过反问引导思考 |
 
-### 关于导师蒸馏
+### 导师蒸馏（🎓 核心功能）
 
-当你输入导师姓名后，后台会自动：
+左侧输入导师姓名和机构，点击「🎯 提取 Persona」：
 
-1. 🔍 搜索 ArXiv 获取最新论文
-2. 🌐 搜索网络获取主页、Google Scholar 等公开信息
-3. 📄 抓取最有价值的网页内容
-4. 🧠 用 DeepSeek 综合分析，生成包含以下内容的导师画像：
-   - 研究领域与风格
-   - 教学/指导风格
-   - 性格特征
-   - 典型面试问题
-   - 面试官风格指令
+1. 🔍 自动搜索 ArXiv 论文（最多 15 篇）
+2. 🌐 搜索 Google Scholar / 维基百科 / 个人主页
+3. 📄 读取网页内容
+4. 🧠 DeepSeek AI 分析 → 生成导师画像
+5. 💾 存入数据库（重启不丢）
 
-> 整个过程约 30-60 秒（取决于搜索和 AI 分析速度）。
+提取完成后，选择该导师作为面试官，方向选择「🎓 该教授自身专业」即可开始面试。
+
+### 如何删除导师？
+
+点击导师卡片上的 🗑️ 按钮即可。
 
 ---
 
-## API 参考
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/personas` | 获取所有面试官人格 |
-| GET | `/api/personas/{id}` | 获取某个面试官详情 |
-| POST | `/api/personas/extract` | 提取导师 Persona（蒸馏） |
-| DELETE | `/api/personas/{id}` | 删除已提取的导师 |
-| POST | `/api/interview/start` | 开始面试 |
-| POST | `/api/interview/respond` | 继续面试（回复） |
-| POST | `/api/interview/end` | 结束面试并获取反馈 |
-
----
-
-## 项目结构
+## 📁 项目结构
 
 ```
 InterviewMate/
-├── backend/
-│   ├── main.py         # FastAPI 服务入口
-│   ├── interview.py    # 面试引擎（DeepSeek 多轮对话）
-│   ├── persona.py      # Persona 管理 / 提取 / SQLite 持久化
-│   ├── .env.example
-│   └── requirements.txt
-├── frontend/
-│   └── index.html      # 单页应用（vanilla JS）
-├── start.sh            # 一键启动脚本
-└── README.md
+├── backend/                # 后端（Python）
+│   ├── main.py            # 服务入口
+│   ├── interview.py       # 面试引擎
+│   ├── persona.py         # 导师管理 + 提取
+│   ├── personas.db        # 数据库（自动生成）
+│   ├── .env.example       # API Key 配置模板
+│   └── requirements.txt   # 依赖清单
+├── frontend/               # 前端（纯 HTML）
+│   └── index.html         # 单页应用
+├── start.sh                # 一键启动脚本
+└── README.md               # 本文件
 ```
 
 ---
 
-## 常见问题
+## 💡 小贴士
 
-**Q: 提取导师时进度很慢？**
-A: 需要同时搜索 ArXiv 和网页，大约 30-60 秒是正常的。
-
-**Q: 导师图像重启后还在吗？**
-A: 在的。数据存储在 `backend/personas.db`（SQLite），重启不丢失。
-
-**Q: 用什么 AI 模型？**
-A: 推荐DeepSeek，在 `.env` 中配置 API Key。也可以换成其他兼容 OpenAI 接口的模型。
+- 想**改代码**？用 VS Code 或任何编辑器打开项目文件夹
+- 想**贡献代码**？Fork 这个仓库，改完后提 Pull Request
+- 想**提问**？提 Issue：https://github.com/aimuyoufaze/InterviewMate/issues
 
 ---
 
-## 下一步规划
-
-- [ ] 通过 web_search + web_fetch 自动搜集导师论文/主页/访谈信息 ✅ *已实现*
-- [ ] 面试记录持久化（SQLite）
-- [ ] 语音面试支持
-- [ ] 多人面试模拟
+*Happy Interviewing! 🎙️*
