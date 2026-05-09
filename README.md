@@ -141,7 +141,7 @@ A: 需要同时搜索 ArXiv 和网页，大约 30-60 秒是正常的。
 A: 在的。数据存储在 `backend/personas.db`（SQLite），重启不丢失。
 
 **Q: 用什么 AI 模型？**
-A: DeepSeek，在 `.env` 中配置 API Key。你也可以换成其他兼容 OpenAI 接口的模型。
+A: 推荐DeepSeek，在 `.env` 中配置 API Key。也可以换成其他兼容 OpenAI 接口的模型。
 
 ---
 
