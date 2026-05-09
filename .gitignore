@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+backend/.venv/
+backend/personas.db
+.env
+.DS_Store
+reports/

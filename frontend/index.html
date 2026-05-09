@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Mate 模拟面试</title>
+<style>
+:root {
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --primary: #4a6cf7;
+  --primary-hover: #3b5de7;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --gentle: #10b981;
+  --strict: #ef4444;
+  --probing: #f59e0b;
+  --socratic: #8b5cf6;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+header .subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Layout ── */
+.app-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 320px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.sidebar-section {
+  margin-bottom: 24px;
+}
+
+/* Persona Cards */
+.persona-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.persona-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.persona-card:hover {
+  border-color: var(--primary);
+  background: #f8faff;
+}
+.persona-card.active {
+  border-color: var(--primary);
+  background: #eef2ff;
+}
+.persona-card .emoji {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.persona-card .info {
+  flex: 1;
+  min-width: 0;
+}
+.persona-card .name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.persona-card .desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.persona-card .tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  background: #eef2ff;
+  color: var(--primary);
+}
+
+/* Extract section */
+.extract-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.extract-form input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.extract-form input:focus {
+  border-color: var(--primary);
+}
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-outline:hover {
+  background: var(--bg);
+}
+
+/* Field input */
+.field-input {
+  margin-top: 8px;
+}
+.field-input label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.field-input select,
+.field-input input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* ── Main Chat Area ── */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Chat status bar */
+.chat-status {
+  padding: 12px 24px;
+  background: #f8faff;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.chat-status .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gentle);
+  display: inline-block;
+}
+.chat-status .dot.pending { background: var(--probing); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Messages */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.message {
+  display: flex;
+  gap: 12px;
+  max-width: 80%;
+}
+.message.interviewer {
+  align-self: flex-start;
+}
+.message.candidate {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.message .avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  background: #eef2ff;
+}
+.message.candidate .avatar {
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+.message .bubble {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.message.interviewer .bubble {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+.message.candidate .bubble {
+  background: var(--primary);
+  color: white;
+  border-top-right-radius: 4px;
+}
+.message .bubble .label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.message.candidate .bubble .label {
+  color: rgba(255,255,255,0.8);
+}
+
+/* Input area */
+.input-area {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.input-area textarea {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  max-height: 120px;
+}
+.input-area textarea:focus {
+  border-color: var(--primary);
+}
+.input-area .send-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.input-area .send-btn:hover { background: var(--primary-hover); }
+.input-area .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Welcome screen */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  padding: 40px;
+  text-align: center;
+}
+.welcome .icon { font-size: 48px; margin-bottom: 16px; }
+.welcome h2 { font-size: 20px; color: var(--text); margin-bottom: 8px; }
+.welcome p { font-size: 14px; line-height: 1.6; max-width: 400px; }
+
+/* Feedback modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal h2 { font-size: 20px; margin-bottom: 16px; }
+.modal .feedback-content {
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+.modal .feedback-content .score-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.modal .feedback-content .score-item:last-child { border-bottom: none; }
+.modal .close-btn {
+  margin-top: 20px;
+  width: 100%;
+}
+.delete-btn {
+  background: transparent;
+  border: 1px solid #fecaca;
+  color: var(--strict);
+}
+.delete-btn:hover {
+  background: #fef2f2;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+/* Extracted persona badge */
+.extracted-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast notification */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn 0.3s ease;
+  max-width: 380px;
+}
+.toast.success { border-left: 4px solid var(--gentle); }
+.toast.error { border-left: 4px solid var(--strict); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* Section divider in persona list */
+.section-divider {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 4px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.section-divider:first-child { border-top: none; margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎙️ Interview Mate</h1>
+    <span class="subtitle">AI Agent 模拟面试 · 研究生入学准备</span>
+  </div>
+  <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none">结束面试</button>
+</header>
+
+<div class="app-container">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <h2>🎭 选择面试官</h2>
+      <div class="persona-list" id="personaList"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h2>🎓 导师蒸馏</h2>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+        输入导师姓名和机构，提取其学术风格生成专属面试官
+      </p>
+      <div class="extract-form">
+        <input type="text" id="extractName" placeholder="导师姓名（如：Yoshua Bengio）" />
+        <input type="text" id="extractAffil" placeholder="所属机构（如：University of Montreal）" />
+        <button class="btn btn-primary btn-sm" onclick="extractPersona()" id="extractBtn">🎯 提取 Persona</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h2>📚 面试方向</h2>
+      <div class="field-input">
+        <label>目标专业方向</label>
+        <select id="fieldSelect">
+          <option value="__professor_field__" style="display:none;color:var(--primary);font-weight:600">🎓 该教授自身专业</option>
+          <option value="计算机科学 / 人工智能">计算机科学 / 人工智能</option>
+          <option value="数据科学 / 机器学习">数据科学 / 机器学习</option>
+          <option value="自然语言处理">自然语言处理</option>
+          <option value="计算机视觉">计算机视觉</option>
+          <option value="网络安全">网络安全</option>
+          <option value="软件工程">软件工程</option>
+          <option value="自动化">自动化</option>
+          <option value="机器人学">机器人学</option>
+          <option value="生物信息学">生物信息学</option>
+          <option value="认知科学">认知科学</option>
+          <option value="计算神经科学">计算神经科学</option>
+          <option value="经济学">经济学</option>
+          <option value="管理学">管理学</option>
+          <option value="管理科学与工程">管理科学与工程</option>
+          <option value="统计学">统计学</option>
+          <option value="物理">物理</option>
+          <option value="数学">数学</option>
+          <option value="化学">化学</option>
+          <option value="生物学">生物学</option>
+          <option value="医学">医学</option>
+          <option value="法学">法学</option>
+          <option value="教育学">教育学</option>
+          <option value="心理学">心理学</option>
+          <option value="其他（请自定义）">其他</option>
+        </select>
+        <input type="text" id="customField" placeholder="自定义方向" style="display:none;margin-top:8px" />
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="startInterview()" id="startBtn">
+          ▶ 开始面试
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area">
+    <div class="chat-status" id="chatStatus" style="display:none">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">就绪</span>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcomeScreen">
+        <div class="icon">🎙️</div>
+        <h2>准备好面试练习了吗？</h2>
+        <p>1. 在左侧选择一个面试官人格，或通过"导师蒸馏"创建专属面试官<br/>
+        2. 选择你的目标专业方向<br/>
+        3. 点击「开始面试」开始模拟</p>
+        <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">💡 支持：通用人格 · 导师蒸馏 · 多轮对话 · 自动生成反馈</p>
+      </div>
+    </div>
+
+    <div class="input-area" id="inputArea" style="display:none">
+      <textarea id="messageInput" rows="2" placeholder="输入你的回答..." disabled></textarea>
+      <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">发送</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <h2>📊 面试评估报告</h2>
+    <div class="feedback-content" id="feedbackContent">加载中...</div>
+    <button class="btn btn-primary close-btn" onclick="closeFeedback()">关闭</button>
+  </div>
+</div>
+
+<!-- Persona Detail Modal -->
+<div class="modal-overlay" id="personaDetailModal">
+  <div class="modal">
+    <h2>🎓 导师画像详情</h2>
+    <div id="personaDetailContent">
+      <div class="detail-loading" style="text-align:center;padding:40px;color:var(--text-muted)">加载中...</div>
+    </div>
+    <button class="btn btn-primary close-btn" onclick="closePersonaDetail()">关闭</button>
+  </div>
+</div>
+
+<script>
+// ── 状态管理 ──────────────────────────────────
+const API = window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : ''; // 同域部署
+
+const state = {
+  personaId: null,
+  sessionId: null,
+  field: '',
+  isInterviewing: false,
+  isLoading: false,
+  extractedPersonas: {},
+  currentResearchAreas: []
+};
+
+// ── 初始化 ────────────────────────────────────
+async function init() {
+  await loadPersonas();
+  setupEventListeners();
+}
+
+async function loadPersonas() {
+  try {
+    const res = await fetch(`${API}/api/personas`);
+    const data = await res.json();
+    renderPersonas(data.personas);
+  } catch(e) {
+    console.error('加载面试官列表失败', e);
+    // 用默认数据兜底
+    renderPersonas({
+      strict: { id:'strict', name:'严厉型', description:'要求严格，喜欢追问细节', type:'general', avatar_emoji:'😤' },
+      gentle: { id:'gentle', name:'温和型', description:'鼓励式引导，会给出提示', type:'general', avatar_emoji:'😊' },
+      probing: { id:'probing', name:'追问型', description:'层层深入，测试知识深度', type:'general', avatar_emoji:'🔍' },
+      socratic: { id:'socratic', name:'苏格拉底型', description:'通过反问引导思考', type:'general', avatar_emoji:'🧠' }
+    });
+  }
+}
+
+function renderPersonas(personas) {
+  const container = document.getElementById('personaList');
+  container.innerHTML = '';
+
+  // 分组：通用 + 提取的
+  const general = [];
+  const extracted = [];
+  Object.values(personas).forEach(p => {
+    if (p.type === 'extracted') extracted.push(p);
+    else general.push(p);
+  });
+
+  // 通用面试官
+  if (general.length) {
+    const divider = document.createElement('div');
+    divider.className = 'section-divider';
+    divider.textContent = '🎭 通用面试官';
+    container.appendChild(divider);
+    general.forEach(p => container.appendChild(createPersonaCard(p, false)));
+  }
+
+  // 已提取的导师
+  if (extracted.length) {
+    const divider = document.createElement('div');
+    divider.className = 'section-divider';
+    divider.textContent = '🎓 已蒸馏的导师';
+    container.appendChild(divider);
+    extracted.forEach(p => container.appendChild(createPersonaCard(p, true)));
+  }
+
+  // 默认选中第一个
+  const first = container.querySelector('.persona-card');
+  if (first) selectPersona(first.dataset.id, first);
+}
+
+function createPersonaCard(p, isExtracted) {
+  const card = document.createElement('div');
+  card.className = 'persona-card';
+  card.dataset.id = p.id;
+  card.dataset.type = isExtracted ? 'extracted' : 'general';
+  card.dataset.researchAreas = isExtracted ? JSON.stringify(p.research_areas || []) : '[]';
+  card.innerHTML = `
+    <div class="emoji">${p.avatar_emoji || '🎭'}</div>
+    <div class="info">
+      <div class="name">${p.name}</div>
+      <div class="desc">${p.description || ''}</div>
+      ${isExtracted
+        ? `<div class="tag">🎓 ${(p.research_areas||[]).join(' · ')}</div>`
+        : `<span class="tag">通用</span>`
+      }
+    </div>
+    ${isExtracted ? `
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm btn-outline" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();viewPersonaDetail('${p.id}')">📋</button>
+        <button class="btn btn-sm btn-outline" style="padding:4px 8px;font-size:11px;color:var(--strict);border-color:#fecaca" onclick="event.stopPropagation();deletePersona('${p.id}', '${p.name}')">🗑️</button>
+      </div>
+    ` : ''}
+  `;
+  card.onclick = () => selectPersona(p.id, card);
+  return card;
+}
+
+function selectPersona(id, el) {
+  document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  state.personaId = id;
+
+  // 处理面试方向下拉：如果是已蒸馏的导师，显示并自动选中"该教授自身专业"
+  const fieldSelect = document.getElementById('fieldSelect');
+  const profOption = fieldSelect.querySelector('option[value="__professor_field__"]');
+  const isExtracted = el && el.dataset.type === 'extracted';
+
+  if (isExtracted && profOption) {
+    profOption.style.display = 'block';
+    // 存储该导师的研究方向以备后用
+    try {
+      state.currentResearchAreas = JSON.parse(el.dataset.researchAreas || '[]');
+    } catch(e) {
+      state.currentResearchAreas = [];
+    }
+    fieldSelect.value = '__professor_field__';
+  } else if (profOption) {
+    profOption.style.display = 'none';
+    state.currentResearchAreas = [];
+    // 如果当前选中的就是该选项且不再适用，切回第一个常规选项
+    if (fieldSelect.value === '__professor_field__') {
+      fieldSelect.selectedIndex = 1; // 第一个常规选项
+    }
+  }
+
+  // 触发 change 事件，处理自定义输入显示
+  fieldSelect.dispatchEvent(new Event('change'));
+}
+
+function setupEventListeners() {
+  const fieldSelect = document.getElementById('fieldSelect');
+  const customField = document.getElementById('customField');
+  fieldSelect.addEventListener('change', () => {
+    customField.style.display = fieldSelect.value === '其他（请自定义）' ? 'block' : 'none';
+    // 如果是"该教授自身专业"，不显示自定义输入
+    if (fieldSelect.value === '__professor_field__') {
+      customField.style.display = 'none';
+    }
+  });
+
+  // 回车发送
+  document.getElementById('messageInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+// ── Persona Extraction ────────────────────────
+async function extractPersona() {
+  const name = document.getElementById('extractName').value.trim();
+  const affiliation = document.getElementById('extractAffil').value.trim();
+  if (!name) { showToast('请输入导师姓名', 'error'); return; }
+
+  const btn = document.getElementById('extractBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 提取中...';
+
+  try {
+    const res = await fetch(`${API}/api/personas/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, affiliation })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '提取失败');
+    const p = data.persona;
+    state.extractedPersonas[p.id] = p;
+
+    showToast(`🎉 成功提取 "${p.name}" 的学术画像！`, 'success');
+    await loadPersonas();
+    state.extractedPersonas[p.id] = p;
+
+    alert(`🎉 已成功提取 "${p.name}" 的面试官画像！\n已添加到面试官列表，请重新选择。`);
+    await loadPersonas();
+
+    // 选中刚提取的
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.persona-card');
+      cards.forEach(c => {
+        if (c.dataset.id === p.id) selectPersona(p.id, c);
+      });
+    }, 100);
+  } catch(e) {
+    showToast('❌ 提取失败: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🎯 提取 Persona';
+  }
+}
+
+// ── Persona 详情 ──────────────────────────────
+async function viewPersonaDetail(id) {
+  const modal = document.getElementById('personaDetailModal');
+  const content = document.getElementById('personaDetailContent');
+  content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ 加载中...</div>';
+  modal.classList.add('show');
+
+  try {
+    let p = state.extractedPersonas[id];
+    if (!p) {
+      const res = await fetch(`${API}/api/personas/${id}`);
+      const data = await res.json();
+      p = data.persona;
+    }
+
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div style="font-size:48px">🎓</div>
+        <div>
+          <div style="font-size:20px;font-weight:700">${p.name}</div>
+          <div style="color:var(--text-muted);font-size:14px">${p.title || '教授'} @ ${p.affiliation}</div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse">
+        <tr>
+          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top">研究方向</td>
+          <td style="padding:10px 12px">${(p.research_areas || []).map(r => `<span style="display:inline-block;background:#eef2ff;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px">${r}</span>`).join('')}</td>
+        </tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top">研究风格</td>
+          <td style="padding:10px 12px;color:var(--text-muted)">${p.research_style || '分析中...'}</td>
+        </tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top">指导风格</td>
+          <td style="padding:10px 12px;color:var(--text-muted)">${p.teaching_style || '分析中...'}</td>
+        </tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top">性格特征</td>
+          <td style="padding:10px 12px">${(p.personality_traits || []).map(t => `<span style="display:inline-block;background:#fef3c7;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px">${t}</span>`).join('')}</td>
+        </tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top">典型问题</td>
+          <td style="padding:10px 12px">
+            <ol style="margin:0;padding-left:20px;font-size:13px;color:var(--text)">
+              ${(p.typical_questions || []).map(q => `<li style="margin-bottom:4px">${q}</li>`).join('')}
+            </ol>
+          </td>
+        </tr>
+      </table>
+
+      <details style="margin-top:20px">
+        <summary style="cursor:pointer;font-size:13px;color:var(--text-muted)">🤖 查看 LLM 风格指令</summary>
+        <pre style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:12px;margin-top:8px;white-space:pre-wrap;word-break:break-word">${(p.style_prompt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+      </details>
+    `;
+  } catch(e) {
+    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--strict)">❌ 加载失败: ${e.message}</div>`;
+  }
+}
+
+function closePersonaDetail() {
+  document.getElementById('personaDetailModal').classList.remove('show');
+}
+
+// ── 删除导师 ────────────────────────────────
+async function deletePersona(id, name) {
+  if (!confirm(`确定要删除导师 "${name}" 的面试官画像吗？（删除后不可恢复）`)) return;
+  try {
+    const res = await fetch(`${API}/api/personas/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.detail || '删除失败');
+    }
+    showToast(`🗑️ 已删除 "${name}"`, 'success');
+    // 刷新列表
+    await loadPersonas();
+    // 如果当前选中的就是被删的，取消选中
+    if (state.personaId === id) {
+      state.personaId = null;
+      const firstCard = document.querySelector('.persona-card');
+      if (firstCard) selectPersona(firstCard.dataset.id, firstCard);
+    }
+  } catch(e) {
+    showToast('❌ 删除失败: ' + e.message, 'error');
+  }
+}
+
+// ── Toast 通知 ────────────────────────────────
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ── 面试流程 ──────────────────────────────────
+async function startInterview() {
+  if (!state.personaId) { alert('请先选择一个面试官人格'); return; }
+
+  const fieldSelect = document.getElementById('fieldSelect');
+  const customField = document.getElementById('customField');
+  
+  if (fieldSelect.value === '__professor_field__') {
+    // 使用该导师自身专业方向
+    state.field = state.currentResearchAreas.length > 0
+      ? state.currentResearchAreas.join(' / ')
+      : '人工智能';
+  } else {
+    state.field = fieldSelect.value === '其他（请自定义）' ? customField.value.trim() : fieldSelect.value;
+  }
+  if (!state.field) { alert('请输入/选择目标专业方向'); return; }
+
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 连接中...';
+
+  try {
+    const res = await fetch(`${API}/api/interview/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ persona_id: state.personaId, field: state.field })
+    });
+    const data = await res.json();
+    if (data.error) { throw new Error(data.error); }
+
+    state.sessionId = data.session_id;
+    state.isInterviewing = true;
+
+    // 切换 UI
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('chatStatus').style.display = 'flex';
+    document.getElementById('inputArea').style.display = 'flex';
+    document.getElementById('endBtn').style.display = 'inline-block';
+    document.getElementById('startBtn').textContent = '🔄 新面试';
+
+    updateStatus('面试进行中', 'dot');
+
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('messageInput').focus();
+    document.getElementById('sendBtn').disabled = false;
+
+    // 显示第一个问题
+    addMessage('interviewer', data.question);
+  } catch(e) {
+    alert('启动面试失败: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    if (!state.isInterviewing) btn.textContent = '▶ 开始面试';
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if (!text || !state.sessionId) return;
+
+  input.value = '';
+  addMessage('candidate', text);
+
+  // 禁用输入
+  setInputEnabled(false);
+  updateStatus('面试官思考中...', 'pending');
+
+  try {
+    const res = await fetch(`${API}/api/interview/respond`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: state.sessionId, message: text })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    addMessage('interviewer', data.question);
+    updateStatus('面试进行中', 'dot');
+  } catch(e) {
+    addMessage('interviewer', `⚠️ 回复获取失败: ${e.message}。请稍后重试。`);
+  } finally {
+    setInputEnabled(true);
+    input.focus();
+  }
+}
+
+async function endInterview() {
+  if (!state.sessionId) return;
+  if (!confirm('确定结束本次面试并生成反馈报告吗？')) return;
+
+  setInputEnabled(false);
+  updateStatus('生成反馈报告中...', 'pending');
+
+  try {
+    const res = await fetch(`${API}/api/interview/end`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: state.sessionId })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    showFeedback(data.feedback);
+  } catch(e) {
+    alert('生成反馈失败: ' + e.message);
+  }
+
+  state.isInterviewing = false;
+  state.sessionId = null;
+  document.getElementById('endBtn').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('chatStatus').style.display = 'none';
+  document.getElementById('startBtn').textContent = '▶ 开始面试';
+}
+
+// ── UI 辅助 ──────────────────────────────────
+function addMessage(role, text) {
+  const container = document.getElementById('messages');
+  const msg = document.createElement('div');
+  msg.className = `message ${role}`;
+
+  const avatar = role === 'interviewer'
+    ? '<div class="avatar">🎙️</div>'
+    : '<div class="avatar">我</div>';
+
+  const label = role === 'interviewer' ? '面试官' : '你';
+
+  msg.innerHTML = `
+    ${avatar}
+    <div class="bubble">
+      <div class="label">${label}</div>
+      ${text}
+    </div>
+  `;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function setInputEnabled(enabled) {
+  document.getElementById('messageInput').disabled = !enabled;
+  document.getElementById('sendBtn').disabled = !enabled;
+}
+
+function updateStatus(text, dotClass) {
+  document.getElementById('statusText').textContent = text;
+  const dot = document.getElementById('statusDot');
+  dot.className = 'dot' + (dotClass ? ' ' + dotClass : '');
+}
+
+function showFeedback(feedback) {
+  document.getElementById('feedbackContent').textContent = feedback;
+  document.getElementById('feedbackModal').classList.add('show');
+}
+
+function closeFeedback() {
+  document.getElementById('feedbackModal').classList.remove('show');
+}
+
+// ── Bootstrap ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,502 @@
+"""
+Persona 提取模块
+- 真实版：ArXiv 论文搜索 + 网络搜索 + DeepSeek 分析 → 导师画像
+"""
+import hashlib
+import json
+import re
+import sqlite3
+from pathlib import Path
+from typing import Optional
+
+import httpx
+from duckduckgo_search import DDGS
+from pydantic import BaseModel
+
+# ── 通用面试官人格 ──────────────────────────────────
+
+GENERAL_PERSONAS = {
+    "strict": {
+        "id": "strict",
+        "name": "严厉型",
+        "description": "要求严格，喜欢追问细节，不会轻易给出正面评价",
+        "style_prompt": "你是一位严厉的研究生面试官。你的风格是：语气严肃、要求严格、喜欢追问技术细节和逻辑漏洞。不要轻易说\"很好\"，要不断挑战候选人的回答。给出有建设性的批评。",
+        "avatar_emoji": "😤"
+    },
+    "gentle": {
+        "id": "gentle",
+        "name": "温和型",
+        "description": "鼓励式引导，会给出提示和方向性建议",
+        "style_prompt": "你是一位温和的研究生面试官。你的风格是：语气友善、鼓励式引导、当候选人卡住时会给出提示。先肯定再指出不足，帮助候选人发挥出最好水平。",
+        "avatar_emoji": "😊"
+    },
+    "probing": {
+        "id": "probing",
+        "name": "追问型",
+        "description": "一个问题接着一个问题，测试知识深度",
+        "style_prompt": "你是一位追问型的研究生面试官。你的风格是：抛出一个问题后，根据回答连续追问3-4层，层层深入，直到触及候选人知识边界。不满足于表面答案，注重考察思维深度。",
+        "avatar_emoji": "🔍"
+    },
+    "socratic": {
+        "id": "socratic",
+        "name": "苏格拉底型",
+        "description": "通过反问引导候选人自己发现答案",
+        "style_prompt": "你是一位苏格拉底式的研究生面试官。你很少直接回答问题，而是通过连续的反问和质疑来引导候选人自己思考和发现答案。注重考察逻辑推理能力和批判性思维。",
+        "avatar_emoji": "🧠"
+    }
+}
+
+# ── 提取的导师画像模型 ──────────────────────────────
+
+class ExtractedPersona(BaseModel):
+    id: str
+    name: str
+    affiliation: str
+    title: str
+    research_areas: list[str]
+    research_style: str
+    teaching_style: str
+    personality_traits: list[str]
+    typical_questions: list[str]
+    style_prompt: str
+    source_urls: list[str]
+
+
+# ── SQLite 持久化 ──────────────────────────────────
+
+DB_PATH = Path(__file__).parent / "personas.db"
+
+
+def _get_conn():
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _init_db():
+    conn = _get_conn()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS personas (
+            id              TEXT PRIMARY KEY,
+            name            TEXT NOT NULL,
+            affiliation     TEXT NOT NULL DEFAULT '',
+            title           TEXT DEFAULT '',
+            research_areas  TEXT DEFAULT '[]',
+            research_style  TEXT DEFAULT '',
+            teaching_style  TEXT DEFAULT '',
+            personality_traits TEXT DEFAULT '[]',
+            typical_questions  TEXT DEFAULT '[]',
+            style_prompt    TEXT DEFAULT '',
+            source_urls     TEXT DEFAULT '[]',
+            created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+_init_db()
+
+
+def _row_to_dict(row) -> dict:
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "affiliation": row["affiliation"],
+        "title": row["title"],
+        "research_areas": json.loads(row["research_areas"]),
+        "research_style": row["research_style"],
+        "teaching_style": row["teaching_style"],
+        "personality_traits": json.loads(row["personality_traits"]),
+        "typical_questions": json.loads(row["typical_questions"]),
+        "style_prompt": row["style_prompt"],
+        "source_urls": json.loads(row["source_urls"]),
+        "created_at": row["created_at"],
+    }
+
+
+def get_all_personas() -> dict:
+    result = {}
+    for pid, p in GENERAL_PERSONAS.items():
+        result[pid] = {
+            "id": pid, "name": p["name"],
+            "description": p["description"],
+            "type": "general",
+            "avatar_emoji": p["avatar_emoji"]
+        }
+    conn = _get_conn()
+    rows = conn.execute("SELECT * FROM personas ORDER BY created_at DESC").fetchall()
+    conn.close()
+    for row in rows:
+        p = _row_to_dict(row)
+        result[p["id"]] = {
+            "id": p["id"], "name": p["name"],
+            "description": f"{p['title']} @ {p['affiliation']}",
+            "type": "extracted",
+            "research_areas": p["research_areas"],
+            "avatar_emoji": "🎓"
+        }
+    return result
+
+
+def get_persona(pid: str) -> Optional[dict]:
+    if pid in GENERAL_PERSONAS:
+        return GENERAL_PERSONAS[pid]
+    conn = _get_conn()
+    row = conn.execute("SELECT * FROM personas WHERE id=?", (pid,)).fetchone()
+    conn.close()
+    if row:
+        return _row_to_dict(row)
+    return None
+
+
+def get_style_prompt(pid: str) -> str:
+    if pid in GENERAL_PERSONAS:
+        return GENERAL_PERSONAS[pid]["style_prompt"]
+    conn = _get_conn()
+    row = conn.execute("SELECT style_prompt FROM personas WHERE id=?", (pid,)).fetchone()
+    conn.close()
+    if row:
+        return row["style_prompt"]
+    return GENERAL_PERSONAS["gentle"]["style_prompt"]
+
+
+def store_extracted_persona(persona: ExtractedPersona):
+    conn = _get_conn()
+    conn.execute("""
+        INSERT OR REPLACE INTO personas
+               (id, name, affiliation, title, research_areas, research_style,
+                teaching_style, personality_traits, typical_questions,
+                style_prompt, source_urls)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        persona.id, persona.name, persona.affiliation, persona.title,
+        json.dumps(persona.research_areas, ensure_ascii=False),
+        persona.research_style,
+        persona.teaching_style,
+        json.dumps(persona.personality_traits, ensure_ascii=False),
+        json.dumps(persona.typical_questions, ensure_ascii=False),
+        persona.style_prompt,
+        json.dumps(persona.source_urls, ensure_ascii=False),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def delete_persona(pid: str) -> bool:
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM personas WHERE id=?", (pid,))
+    conn.commit()
+    conn.close()
+    return cur.rowcount > 0
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 真实版 Persona Extraction 流水线
+# ══════════════════════════════════════════════════════════════════════
+
+# ── 1. ArXiv 论文搜索 ─────────────────────────────
+
+async def search_arxiv(name: str, max_results: int = 15) -> list[dict]:
+    """搜索 ArXiv 上导师的论文"""
+    import urllib.parse
+    # 用 all: 格式 + 姓名（效果好于 au: 格式）
+    query_name = urllib.parse.quote(f'"{name}"')
+    url = (
+        "http://export.arxiv.org/api/query"
+        f"?search_query=all:{query_name}"
+        f"&start=0&max_results={max_results}"
+        "&sortBy=submittedDate&sortOrder=descending"
+    )
+
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+        resp = await client.get(url)
+        text = resp.text
+
+    # 简单 XML 解析
+    papers = []
+    entries = re.findall(r"<entry>.*?</entry>", text, re.DOTALL)
+    for entry in entries:
+        title_m = re.search(r"<title>(.*?)</title>", entry, re.DOTALL)
+        summary_m = re.search(r"<summary>(.*?)</summary>", entry, re.DOTALL)
+        published_m = re.search(r"<published>(.*?)</published>", entry)
+        arxiv_id_m = re.search(r"<id>(.*?)</id>", entry)
+        authors = re.findall(r"<name>(.*?)</name>", entry)
+
+        if not title_m:
+            continue
+
+        papers.append({
+            "title": title_m.group(1).strip(),
+            "summary": summary_m.group(1).strip() if summary_m else "",
+            "published": published_m.group(1) if published_m else "",
+            "year": published_m.group(1)[:4] if published_m else "",
+            "arxiv_id": arxiv_id_m.group(1).split("/")[-1] if arxiv_id_m else "",
+            "authors": authors,
+        })
+
+    return papers
+
+
+# ── 2. 网络搜索 ───────────────────────────────────
+
+async def search_web(name: str, affiliation: str = "", max_results: int = 5) -> list[dict]:
+    """用 DuckDuckGo 搜索导师公开信息"""
+    results = []
+    query_terms = [name]
+    if affiliation:
+        query_terms.append(affiliation)
+    query = " ".join(query_terms)
+
+    try:
+        with DDGS() as ddgs:
+            for i, r in enumerate(ddgs.text(query, max_results=max_results)):
+                results.append({
+                    "title": r.get("title", ""),
+                    "url": r.get("href", ""),
+                    "body": r.get("body", ""),
+                })
+    except Exception as e:
+        print(f"[WARN] 网络搜索失败: {e}")
+
+    return results
+
+
+# ── 3. 抓取网页内容 ───────────────────────────────
+
+async def fetch_pages(urls: list[str], max_chars: int = 3000) -> list[str]:
+    """抓取多个网页的文本内容"""
+    contents = []
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+
+        for url in urls[:3]:  # 最多抓 3 个
+            try:
+                resp = await client.get(url, headers={
+                    "User-Agent": "Mozilla/5.0 (compatible; InterviewMate/1.0)"
+                })
+                if resp.status_code == 200:
+                    text = resp.text
+                    # 简单去标签
+                    text = re.sub(r"<[^>]+>", " ", text)
+                    text = re.sub(r"\s+", " ", text).strip()
+                    if len(text) > max_chars:
+                        text = text[:max_chars]
+                    contents.append(text)
+            except Exception:
+                pass
+    return contents
+
+
+# ── 4. DeepSeek 分析生成画像 ─────────────────────
+
+DEEPSEEK_BASE = None  # will read from env
+DEEPSEEK_KEY = None
+
+
+def _init_deepseek():
+    global DEEPSEEK_BASE, DEEPSEEK_KEY
+    if DEEPSEEK_KEY is not None:
+        return  # already loaded
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+    DEEPSEEK_BASE = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+
+
+async def _call_deepseek(messages: list[dict], max_tokens: int = 4096, temperature: float = 0.7) -> str:
+    _init_deepseek()
+    if not DEEPSEEK_KEY:
+        return json.dumps({"error": "DEEPSEEK_API_KEY 未配置"})
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        resp = await client.post(
+            f"{DEEPSEEK_BASE}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "deepseek-v4-flash",
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+
+ANALYSIS_SYSTEM_PROMPT = """你是一位学术人才分析专家。你的任务是基于提供的导师公开信息，生成一份结构化的导师画像 JSON。
+
+请严格按照以下 JSON 格式输出，只输出 JSON，不要包含任何其他文字，不要使用 markdown 代码块标记：
+
+{
+  "title": "教授的职称（如教授、副教授、助理教授、研究员等）",
+  "research_areas": ["研究领域1", "研究领域2", "研究领域3", ...],
+  "research_style": "对导师研究风格的详细描述（理论驱动/应用驱动/混合型，喜欢什么类型的问题等）",
+  "teaching_style": "导师的教学和指导风格描述（基于能找到的信息推断）",
+  "personality_traits": ["性格特征1", "性格特征2", "性格特征3", ...],
+  "typical_questions": [
+    "这位面试官可能问候选人的面试问题1",
+    "面试问题2",
+    "面试问题3"
+  ],
+  "style_prompt": "一段详细的提示词，用于指导 DeepSeek 模型扮演这位导师作为研究生面试官。包含：身份说明、研究领域、风格特点、面试语气等。",
+  "summary": "一句话总结这位导师的学术画像"
+}
+
+要求：
+- research_areas 至少 3 个，最多 5 个
+- personality_traits 至少 3 个
+- typical_questions 至少 5 个，要有专业深度
+- style_prompt 要用第二人称，格式为\"你是 [姓名]教授（[机构]）的数字分身面试官...\"
+- 所有内容基于提供的公开信息，不要编造"""
+
+
+async def analyze_with_deepseek(
+    name: str,
+    affiliation: str,
+    papers: list[dict],
+    web_info: list[dict],
+    page_contents: list[str],
+) -> dict:
+    """用 DeepSeek 分析收集到的信息，生成导师画像"""
+    # 整理信息文本
+    info_parts = [f"导师姓名: {name}", f"所属机构: {affiliation}"]
+
+    if papers:
+        info_parts.append(f"\n--- ArXiv 论文 ({len(papers)} 篇) ---")
+        for p in papers[:8]:
+            info_parts.append(
+                f"- {p['title']} ({p['year']})\n"
+                f"  摘要: {p['summary'][:300]}"
+            )
+
+    if web_info:
+        info_parts.append(f"\n--- 网络搜索结果 ({len(web_info)} 条) ---")
+        for r in web_info[:5]:
+            info_parts.append(f"- {r['title']}: {r['body'][:200]}")
+
+    if page_contents:
+        info_parts.append(f"\n--- 网页内容 ---")
+        for c in page_contents[:3]:
+            info_parts.append(c[:1500])
+
+    user_message = "\n".join(info_parts)
+
+    try:
+        reply = await _call_deepseek([
+            {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
+            {"role": "user", "content": user_message},
+        ])
+
+        # 尝试解析 JSON
+        # 去除可能的 markdown code block 包裹
+        json_str = reply.strip()
+        if json_str.startswith("```"):
+            json_str = re.sub(r"^```(?:json)?\s*", "", json_str)
+            json_str = re.sub(r"\s*```$", "", json_str)
+
+        result = json.loads(json_str)
+        return result
+    except Exception as e:
+        print(f"[ERROR] DeepSeek 分析失败: {e}")
+        return {
+            "error": f"分析失败: {e}",
+            "research_areas": [f"{name}的主要研究方向"],
+            "research_style": "待分析",
+            "teaching_style": "待分析",
+            "personality_traits": ["待分析"],
+            "typical_questions": [],
+            "style_prompt": f"你是{name}教授（{affiliation}）的数字分身面试官。",
+            "summary": f"{name}教授的学术画像",
+        }
+
+
+# ── 5. 提取流水线（主入口）─────────────────────────
+
+async def extract_persona_async(
+    name: str,
+    affiliation: str = "",
+    papers_urls: list[str] | None = None,
+    materials: list[str] | None = None,
+    progress_callback=None,
+) -> dict:
+    """完整版导师画像提取流程"""
+    # 生成唯一 ID
+    raw = f"{name}:{affiliation}:{hashlib.md5(str(hash(name+affiliation)).encode()).hexdigest()}"
+    pid = "prof_" + hashlib.md5(raw.encode()).hexdigest()[:12]
+
+    current_papers = []
+    current_web_info = []
+    current_page_contents = []
+
+    # ---- 第 1 步：搜索 ArXiv 论文 ----
+    if progress_callback:
+        await progress_callback("search_arxiv", "正在搜索 ArXiv 论文...")
+    try:
+        current_papers = await search_arxiv(name)
+    except Exception as e:
+        print(f"[WARN] ArXiv 搜索失败: {e}")
+
+    # ---- 第 2 步：网络搜索 ----
+    if progress_callback:
+        await progress_callback("search_web", "正在网络搜索公开信息...")
+    try:
+        current_web_info = await search_web(name, affiliation)
+    except Exception as e:
+        print(f"[WARN] 网络搜索失败: {e}")
+
+    # ---- 第 3 步：抓取页面 ----
+    urls_to_fetch = []
+    for r in current_web_info:
+        u = r.get("url", "")
+        if u and not any(skip in u for skip in ["youtube.com", "facebook.com", "twitter.com"]):
+            urls_to_fetch.append(u)
+
+    if urls_to_fetch and progress_callback:
+        await progress_callback("fetch_pages", "正在读取网页内容...")
+    try:
+        current_page_contents = await fetch_pages(urls_to_fetch)
+    except Exception as e:
+        print(f"[WARN] 页面抓取失败: {e}")
+
+    # ---- 第 4 步：DeepSeek 分析 ----
+    if progress_callback:
+        await progress_callback("analyzing", "正在用 AI 分析生成导师画像...")
+    analysis = await analyze_with_deepseek(
+        name, affiliation,
+        current_papers, current_web_info, current_page_contents
+    )
+
+    # ---- 第 5 步：构建并保存 ----
+    source_urls = [r["url"] for r in current_web_info if r.get("url")]
+
+    persona = ExtractedPersona(
+        id=pid,
+        name=name,
+        affiliation=affiliation,
+        title=analysis.get("title", "教授"),
+        research_areas=analysis.get("research_areas", [f"{name}的主要研究方向"]),
+        research_style=analysis.get("research_style", "待分析"),
+        teaching_style=analysis.get("teaching_style", "待分析"),
+        personality_traits=analysis.get("personality_traits", ["待分析"]),
+        typical_questions=analysis.get("typical_questions", [
+            "请介绍一下你之前的研究经历",
+            "你为什么对我们这个方向感兴趣？",
+        ]),
+        style_prompt=analysis.get("style_prompt",
+            f"你是{name}教授（{affiliation}）的数字分身面试官。"),
+        source_urls=source_urls,
+    )
+    store_extracted_persona(persona)
+
+    result = persona.model_dump()
+    result["_stats"] = {
+        "papers_found": len(current_papers),
+        "web_results": len(current_web_info),
+        "pages_fetched": len(current_page_contents),
+    }
+    return result
