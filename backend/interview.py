@@ -109,17 +109,33 @@ async def _call_deepseek(messages: list[dict], max_tokens: int = 1024, temperatu
 
 # ── 面试逻辑 ──────────────────────────────────────
 
-async def start_interview(persona_id: str, field: str) -> dict:
-    """开始一轮新面试，返回第一个问题"""
+async def start_interview(persona_id: str, field: str, background: str | None = None, resume: str | None = None) -> dict:
+    """开始一轮新面试，返回第一个问题
+
+    Args:
+        persona_id: 面试官人格 ID
+        field: 面试方向
+        background: 可选的项目背景文件内容
+        resume: 可选的个人简历内容
+    """
     style_prompt = get_style_prompt(persona_id)
 
     session = InterviewSession(persona_id, field)
     session.save()
 
+    # 基础 system prompt
     system_msg = SYSTEM_PROMPT_QUESTION.format(
         persona_style=style_prompt,
         field=field
     )
+
+    # 如果有背景文件内容，附加到 system prompt
+    if background and background.strip():
+        system_msg += f"\n\n【项目背景要求】\n{background.strip()}\n\n请注意：以上是候选人的项目背景信息。面试问题时需要结合候选人的项目背景进行针对性提问，考察候选人对该领域的理解和匹配度。"
+
+    # 如果有简历内容，附加到 system prompt
+    if resume and resume.strip():
+        system_msg += f"\n\n【候选人简历】\n{resume.strip()}\n\n注意：以上是候选人的个人简历。面试官应该仔细阅读简历内容，并基于简历中的经历、技能和项目提出有针对性的问题。"
 
     msgs = [
         {"role": "system", "content": system_msg},

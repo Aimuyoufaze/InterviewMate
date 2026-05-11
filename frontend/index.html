@@ -3,601 +3,959 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interview Mate 模拟面试</title>
+<title>Interview Mate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f5f7fa;
-  --card: #ffffff;
-  --primary: #4a6cf7;
-  --primary-hover: #3b5de7;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --gentle: #10b981;
-  --strict: #ef4444;
-  --probing: #f59e0b;
-  --socratic: #8b5cf6;
-  --shadow: 0 2px 12px rgba(0,0,0,0.08);
-  --radius: 12px;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* ============ Token 变量 ============ */
+:root{
+  --red:        #C8102E;
+  --red-hover:  #A50D26;
+  --red-soft:   #FCEDEF;
+  --red-ring:   rgba(200,16,46,.14);
+
+  --paper:      #FBFAF7;   /* 暖白纸张底色 */
+  --bg:         #FFFFFF;
+  --line:       #ECEAE4;
+  --line-2:     #DDDAD2;
+
+  --ink:        #111111;
+  --ink-2:      #3A3A3A;
+  --ink-3:      #6E6E6E;
+  --ink-4:      #A8A6A0;
+
+  --serif: 'Instrument Serif', 'Source Serif Pro', Georgia, serif;
+  --sans:  'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-/* ── Header ── */
-header {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);
+  font-size:15px;line-height:1.6;
+  color:var(--ink);
+  background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;
+  min-height:100vh;
 }
-header h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
+button{font-family:inherit;color:inherit}
+::selection{background:var(--red);color:#fff}
+
+/* 隐藏 JS 注入的 emoji avatar（保留纯文字风格） */
+.persona-card .emoji,
+.message .avatar{display:none !important}
+
+/* ============ Header（固定顶部） ============ */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(251,250,247,.85);
+  backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+  height:64px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;
 }
-header .subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
+header h1{
+  font-family:var(--serif);
+  font-size:22px;font-weight:400;letter-spacing:-.01em;
+  color:var(--ink);
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;user-select:none;
+}
+header h1 i{
+  font-style:italic;color:var(--red);
+}
+header .nav{display:flex;align-items:center;gap:8px}
+
+/* 设置按钮（齿轮图标） */
+#settingsBtn{
+  width:36px;height:36px;
+  border:none;background:transparent;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--ink-3);
+  cursor:pointer;transition:background .12s,color .12s;
+}
+#settingsBtn:hover{background:var(--line);color:var(--ink)}
+
+/* ============ 按钮 ============ */
+.btn{
+  font-family:var(--sans);
+  font-size:13px;font-weight:500;
+  padding:9px 16px;border-radius:999px;
+  border:1px solid transparent;background:transparent;
+  cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s,transform .08s;
+  letter-spacing:.01em;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:var(--red)}
+.btn-primary:disabled{background:var(--ink-4);cursor:not-allowed}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-outline{
+  border-color:var(--line-2);color:var(--ink-2);background:transparent;
+}
+.btn-outline:hover{border-color:var(--ink);color:var(--ink);background:#fff}
+
+/* ============ 应用容器 ============ */
+.app-container{
+  flex:1;display:flex;flex-direction:column;
+  min-height:0;
 }
 
-/* ── Layout ── */
-.app-container {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
+/* 在面试界面（非欢迎页）没有 sidebar，只有顶部 header */
+.sidebar{display:contents}
+.chat-area{display:contents}
+
+/* 欢迎页 / 设置页 — 单列居中 */
+main, .messages, #welcomeScreen{
+  width:100%;
 }
 
-/* ── Sidebar ── */
-.sidebar {
-  width: 320px;
-  background: var(--card);
-  border-right: 1px solid var(--border);
-  padding: 20px;
-  overflow-y: auto;
-  flex-shrink: 0;
+/* ============ 欢迎/设置页面 ============ */
+#welcomeScreen{
+  max-width:720px;
+  margin:0 auto;
+  padding:80px 40px 160px;
+  display:flex;flex-direction:column;
+  gap:64px;
 }
-.sidebar h2 {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--text);
+.welcome-hero{
+  display:flex;flex-direction:column;gap:18px;
 }
-.sidebar-section {
-  margin-bottom: 24px;
+.welcome-hero .eyebrow{
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.18em;
+  color:var(--red);
 }
-
-/* Persona Cards */
-.persona-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.welcome-hero h2{
+  font-family:var(--serif);
+  font-size:64px;font-weight:400;
+  line-height:1.05;letter-spacing:-.025em;
+  color:var(--ink);
 }
-.persona-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.persona-card:hover {
-  border-color: var(--primary);
-  background: #f8faff;
-}
-.persona-card.active {
-  border-color: var(--primary);
-  background: #eef2ff;
-}
-.persona-card .emoji {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-.persona-card .info {
-  flex: 1;
-  min-width: 0;
-}
-.persona-card .name {
-  font-weight: 600;
-  font-size: 14px;
-}
-.persona-card .desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-.persona-card .tag {
-  display: inline-block;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-top: 4px;
-  background: #eef2ff;
-  color: var(--primary);
+.welcome-hero h2 i{font-style:italic;color:var(--red)}
+.welcome-hero p{
+  font-size:17px;line-height:1.6;color:var(--ink-3);
+  max-width:520px;
 }
 
-/* Extract section */
-.extract-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* 设置步骤 — 编号式编辑区块 */
+.setup-section{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  gap:24px;
+  padding-top:36px;
+  border-top:1px solid var(--line);
 }
-.extract-form input {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
+.setup-section .num{
+  font-family:var(--serif);
+  font-size:32px;font-style:italic;color:var(--red);
+  line-height:1;
 }
-.extract-form input:focus {
-  border-color: var(--primary);
+.setup-section .body{display:flex;flex-direction:column;gap:14px}
+.setup-section h3{
+  font-family:var(--sans);
+  font-size:13px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink);
 }
-.btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-.btn-outline:hover {
-  background: var(--bg);
+.setup-section p.helper{
+  font-size:13.5px;color:var(--ink-3);line-height:1.55;
 }
 
-/* Field input */
-.field-input {
-  margin-top: 8px;
+/* ============ 面试官卡片列表 ============ */
+.persona-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:8px;
+  margin-top:4px;
 }
-.field-input label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+.section-divider{
+  grid-column:1/-1;
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em;
+  color:var(--ink-4);
+  padding:14px 0 4px;
 }
+.section-divider:first-child{padding-top:0}
+
+.persona-card{
+  position:relative;
+  display:flex;align-items:flex-start;gap:0;
+  padding:14px 16px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:12px;
+  cursor:pointer;
+  transition:border-color .15s,background .15s,transform .08s;
+}
+.persona-card:hover{border-color:var(--ink-4)}
+.persona-card.active{
+  border-color:var(--ink);
+  background:var(--bg);
+  box-shadow:0 0 0 1px var(--ink) inset;
+}
+.persona-card.active::after{
+  content:"";
+  position:absolute;top:14px;right:14px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--red);
+}
+.persona-card .info{flex:1;min-width:0}
+.persona-card .name{
+  font-size:14px;font-weight:600;color:var(--ink);
+  letter-spacing:-.005em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.persona-card .desc{
+  font-size:12.5px;color:var(--ink-3);
+  margin-top:4px;line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.persona-card .tag{
+  display:inline-block;
+  font-size:10.5px;font-weight:500;
+  margin-top:8px;padding:0;
+  background:transparent;color:var(--ink-4);
+  letter-spacing:.04em;
+}
+/* 卡片内小按钮（查看详情/删除） */
+.persona-card > div:last-child{
+  margin-left:8px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;
+}
+.persona-card > div:last-child .btn{
+  background:transparent;border:none;
+  padding:3px 6px;font-size:11px;color:var(--ink-4);
+  border-radius:6px;
+}
+.persona-card > div:last-child .btn:hover{background:var(--paper);color:var(--ink)}
+
+/* ============ 表单输入 ============ */
+.extract-form{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.extract-form input,
 .field-input select,
-.field-input input[type="text"] {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
+.field-input input[type="text"]{
+  width:100%;
+  font-family:var(--sans);font-size:14px;
+  padding:11px 14px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:10px;
+  outline:none;color:var(--ink);
+  transition:border-color .12s,box-shadow .12s;
+}
+.extract-form input::placeholder,
+.field-input input::placeholder{color:var(--ink-4)}
+.extract-form input:focus,
+.field-input select:focus,
+.field-input input[type="text"]:focus{
+  border-color:var(--ink);
+  box-shadow:0 0 0 3px rgba(17,17,17,.06);
+}
+.field-input label{display:none}
+.extract-form .btn{align-self:flex-start;margin-top:4px}
+
+/* ============ 开始按钮行 ============ */
+.cta-row{
+  margin-top:16px;
+  padding-top:36px;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;
+}
+#startBtn{
+  font-size:15px;font-weight:600;
+  padding:14px 28px;border-radius:999px;
+  background:var(--red);color:#fff;
+  letter-spacing:.01em;
+}
+#startBtn:hover{background:var(--red-hover)}
+#startBtn:disabled{background:var(--ink-4);cursor:not-allowed}
+
+/* ============ 聊天状态栏 ============ */
+.chat-status{
+  max-width:720px;width:100%;
+  margin:0 auto;padding:16px 40px 0;
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--ink-3);
+  letter-spacing:.04em;text-transform:uppercase;
+  font-weight:500;
+}
+.chat-status .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--ink);display:inline-block;
+}
+.chat-status .dot.pending{
+  background:var(--red);animation:pulse 1.4s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ============ 消息列表 ============ */
+.messages{
+  flex:1;
+  display:flex;flex-direction:column;
+  padding:24px 0 240px;
+  min-height:0;
+  overflow-y:auto;
+}
+.message{
+  width:100%;max-width:720px;
+  margin:0 auto;
+  padding:18px 40px;
+  display:flex;flex-direction:column;gap:6px;
+  animation:msgIn .25s ease;
+}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.message .bubble{
+  font-size:16px;line-height:1.75;
+  color:var(--ink);
+}
+.message .bubble .label{
+  font-family:var(--sans);
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em;
+  color:var(--ink-4);
+  margin-bottom:8px;
+}
+.message.interviewer .bubble{
+  font-family:var(--serif);
+  font-size:22px;line-height:1.45;font-weight:400;
+  letter-spacing:-.005em;
+  color:var(--ink);
+}
+.message.interviewer .bubble .label{
+  color:var(--red);
+}
+.message.candidate{
+  background:transparent;
+}
+.message.candidate .bubble{
+  padding-left:16px;
+  border-left:2px solid var(--ink);
+  font-size:15.5px;
+  color:var(--ink-2);
+  line-height:1.7;
+}
+.message.candidate .bubble .label{color:var(--ink-3)}
+
+/* ============ 底部输入区（固定） ============ */
+.input-area{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:linear-gradient(to top,var(--paper) 70%,rgba(251,250,247,0));
+  padding:24px 40px 28px;
+  z-index:40;
+}
+.input-wrapper{
+  max-width:720px;margin:0 auto;
+  display:flex;align-items:flex-end;gap:8px;
+  padding:10px 10px 10px 18px;
+  background:#fff;
+  border:1px solid var(--line-2);
+  border-radius:18px;
+  box-shadow:0 12px 36px rgba(17,17,17,.06);
+  transition:border-color .12s,box-shadow .12s;
+}
+.input-wrapper:focus-within{
+  border-color:var(--ink);
+  box-shadow:0 16px 44px rgba(17,17,17,.1);
+}
+.input-area textarea{
+  flex:1;
+  border:none;outline:none;background:transparent;
+  font-family:var(--sans);
+  font-size:15px;line-height:1.55;
+  resize:none;
+  padding:8px 0;color:var(--ink);
+  max-height:160px;
+}
+.input-area textarea::placeholder{color:var(--ink-4)}
+
+.mic-btn{
+  width:36px;height:36px;flex-shrink:0;
+  background:transparent;border:none;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--ink-3);
+  cursor:pointer;
+  transition:background .12s,color .12s;
+}
+.mic-btn:hover{background:var(--paper);color:var(--ink)}
+.mic-btn.recording{
+  background:var(--red);color:#fff;
+  animation:micPulse 1.4s infinite;
+}
+.mic-btn.processing{background:#FEF3C7;color:#92400E;pointer-events:none}
+@keyframes micPulse{
+  0%,100%{box-shadow:0 0 0 0 var(--red-ring)}
+  50%{box-shadow:0 0 0 10px rgba(200,16,46,0)}
 }
 
-/* ── Main Chat Area ── */
-.chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.send-btn{
+  flex-shrink:0;
+  background:var(--ink);color:#fff;
+  border:none;border-radius:999px;
+  padding:0 18px;height:36px;
+  font-size:13px;font-weight:600;
+  letter-spacing:.02em;
+  cursor:pointer;
+  transition:background .12s;
 }
+.send-btn:hover{background:var(--red)}
+.send-btn:disabled{background:var(--ink-4);cursor:not-allowed}
 
-/* Chat status bar */
-.chat-status {
-  padding: 12px 24px;
-  background: #f8faff;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+.stt-mode{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:500;
+  padding:0 10px;height:28px;align-self:center;
+  border-radius:999px;
+  background:var(--paper);color:var(--ink-3);
+  cursor:pointer;user-select:none;
+  letter-spacing:.02em;
+  transition:background .12s,color .12s;
 }
-.chat-status .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--gentle);
-  display: inline-block;
-}
-.chat-status .dot.pending { background: var(--probing); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.stt-mode:hover{background:var(--line);color:var(--ink)}
+.stt-mode.backend{background:#FEF3C7;color:#92400E}
 
-/* Messages */
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* ============ 弹窗（Modal）通用结构 ============ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(17,17,17,.45);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;
+  z-index:100;animation:fadeIn .18s ease;
+  padding:20px;
 }
-.message {
-  display: flex;
-  gap: 12px;
-  max-width: 80%;
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--bg);
+  border-radius:20px;
+  width:100%;max-width:620px;max-height:85vh;
+  overflow-y:auto;padding:40px;
+  box-shadow:0 24px 80px rgba(0,0,0,.18);
+  animation:modalIn .22s cubic-bezier(.2,.9,.3,1.1);
 }
-.message.interviewer {
-  align-self: flex-start;
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.modal h2{
+  font-family:var(--serif);
+  font-size:30px;font-weight:400;
+  letter-spacing:-.015em;
+  margin-bottom:20px;color:var(--ink);
 }
-.message.candidate {
-  align-self: flex-end;
-  flex-direction: row-reverse;
+.modal p{
+  font-size:14.5px;line-height:1.8;
+  color:var(--ink-2);
 }
-.message .avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-  background: #eef2ff;
-}
-.message.candidate .avatar {
-  background: var(--primary);
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-}
-.message .bubble {
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.message.interviewer .bubble {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-top-left-radius: 4px;
-}
-.message.candidate .bubble {
-  background: var(--primary);
-  color: white;
-  border-top-right-radius: 4px;
-}
-.message .bubble .label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.message.candidate .bubble .label {
-  color: rgba(255,255,255,0.8);
-}
+.modal .close-btn{margin-top:28px;width:100%;background:var(--ink)}
+.modal .close-btn:hover{background:var(--red)}
 
-/* Input area */
-.input-area {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  background: var(--card);
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
-  flex-shrink: 0;
+/* ── 弹窗内表单 ── */
+.modal .form-group{margin-bottom:20px}
+.modal .form-group label{
+  display:block;font-size:12px;font-weight:600;
+  color:var(--ink-3);margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.06em;
 }
-.input-area textarea {
-  flex: 1;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: none;
-  outline: none;
-  font-family: inherit;
-  max-height: 120px;
+.modal .form-group .file-info{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;background:var(--paper);
+  border:1px solid var(--line);border-radius:10px;
+  font-size:13px;color:var(--ink-2);
 }
-.input-area textarea:focus {
-  border-color: var(--primary);
+.modal .form-group .file-info .remove-file{
+  margin-left:auto;color:var(--red);
+  cursor:pointer;font-size:12px;font-weight:500;
+  border:none;background:transparent;
 }
-.input-area .send-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
+.modal .form-group .file-info .remove-file:hover{text-decoration:underline}
+.modal .form-group input[type="file"]{
+  width:100%;
+  padding:24px 14px;
+  border:2px dashed var(--line-2);
+  border-radius:12px;
+  text-align:center;
+  font-size:13px;color:var(--ink-4);
+  cursor:pointer;background:var(--paper);
+  transition:border-color .12s,background .12s;
 }
-.input-area .send-btn:hover { background: var(--primary-hover); }
-.input-area .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.modal .form-group input[type="file"]:hover{
+  border-color:var(--ink);
+  background:#fff;
+}
+.modal .form-group .skip-hint{
+  font-size:12px;color:var(--ink-4);margin-top:8px;
+}
+.modal .form-actions{
+  display:flex;gap:10px;margin-top:24px;
+}
+.modal .form-actions .btn{flex:1}
 
-/* Welcome screen */
-.welcome {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  padding: 40px;
-  text-align: center;
+/* 背景文件徽章（设置弹窗中用） */
+.bg-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;
+  background:var(--red-soft);color:var(--red);
+  font-size:12px;font-weight:500;
 }
-.welcome .icon { font-size: 48px; margin-bottom: 16px; }
-.welcome h2 { font-size: 20px; color: var(--text); margin-bottom: 8px; }
-.welcome p { font-size: 14px; line-height: 1.6; max-width: 400px; }
+.bg-badge .remove{
+  cursor:pointer;font-size:14px;line-height:1;
+}
+.bg-badge .remove:hover{color:var(--red-hover)}
 
-/* Feedback modal */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+/* ============ 反馈弹窗特殊样式 ============ */
+.modal .feedback-content{
+  font-size:14.5px;line-height:1.8;
+  color:var(--ink-2);white-space:pre-wrap;
 }
-.modal-overlay.show { display: flex; }
-.modal {
-  background: var(--card);
-  border-radius: 16px;
-  width: 90%;
-  max-width: 640px;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 32px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+.modal .feedback-content .score-item{
+  display:flex;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--line);
 }
-.modal h2 { font-size: 20px; margin-bottom: 16px; }
-.modal .feedback-content {
-  font-size: 14px;
-  line-height: 1.8;
-  white-space: pre-wrap;
-}
-.modal .feedback-content .score-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-.modal .feedback-content .score-item:last-child { border-bottom: none; }
-.modal .close-btn {
-  margin-top: 20px;
-  width: 100%;
-}
-.delete-btn {
-  background: transparent;
-  border: 1px solid #fecaca;
-  color: var(--strict);
-}
-.delete-btn:hover {
-  background: #fef2f2;
-}
+.modal .feedback-content .score-item:last-child{border-bottom:none}
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.delete-btn{background:transparent;color:var(--red);border:1px solid var(--red-soft)}
+.delete-btn:hover{background:var(--red-soft)}
 
-/* Extracted persona badge */
-.extracted-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: #fef3c7;
-  color: #92400e;
+/* ============ 杂项 ============ */
+.extracted-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;font-weight:500;
+  padding:2px 8px;border-radius:999px;
+  background:var(--red-soft);color:var(--red);
 }
+.spinner{
+  display:inline-block;width:14px;height:14px;
+  border:2px solid var(--line);
+  border-top-color:var(--red);
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* Loading spinner */
-.spinner {
-  display: inline-block;
-  width: 14px; height: 14px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+/* ============ Toast 通知 ============ */
+.toast-container{
+  position:fixed;top:20px;right:20px;z-index:200;
+  display:flex;flex-direction:column;gap:8px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+.toast{
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 18px;
+  box-shadow:0 8px 28px rgba(0,0,0,.1);
+  font-size:13px;color:var(--ink);
+  max-width:340px;
+  animation:slideIn .25s ease;
+}
+.toast.success{border-left:3px solid var(--ink)}
+.toast.error{border-left:3px solid var(--red)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-/* Toast notification */
-.toast-container {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: slideIn 0.3s ease;
-  max-width: 380px;
-}
-.toast.success { border-left: 4px solid var(--gentle); }
-.toast.error { border-left: 4px solid var(--strict); }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* ============ 滚动条 ============ */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:transparent;border-radius:5px;border:3px solid var(--paper)}
+*:hover::-webkit-scrollbar-thumb{background:var(--line-2)}
 
-/* Section divider in persona list */
-.section-divider {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 8px 4px 4px;
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
+/* ============ 响应式 ============ */
+@media (max-width: 640px){
+  header{padding:0 20px;height:56px}
+  header h1{font-size:18px}
+  #welcomeScreen{padding:48px 24px 140px;gap:48px}
+  .welcome-hero h2{font-size:42px}
+  .setup-section{grid-template-columns:1fr;gap:14px;padding-top:28px}
+  .setup-section .num{font-size:24px}
+  .message{padding:16px 24px}
+  .message.interviewer .bubble{font-size:18px}
+  .input-area{padding:16px 20px 20px}
+  .modal{padding:28px}
+  .modal h2{font-size:24px}
 }
-.section-divider:first-child { border-top: none; margin-top: 0; }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>🎙️ Interview Mate</h1>
-    <span class="subtitle">AI Agent 模拟面试 · 研究生入学准备</span>
+  <!-- 点击 logo 回到欢迎页（仅当在面试中时有用） -->
+  <h1 onclick="if(state.isInterviewing)returnToSetup()">Interview <i>Mate</i></h1>
+  <div class="nav">
+    <button id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
+    <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none">结束面试</button>
   </div>
-  <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none">结束面试</button>
 </header>
 
 <div class="app-container">
 
-  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sidebar-section">
-      <h2>🎭 选择面试官</h2>
-      <div class="persona-list" id="personaList"></div>
-    </div>
+    <div class="chat-area">
 
-    <div class="sidebar-section">
-      <h2>🎓 导师蒸馏</h2>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
-        输入导师姓名和机构，提取其学术风格生成专属面试官
-      </p>
-      <div class="extract-form">
-        <input type="text" id="extractName" placeholder="导师姓名（如：Yoshua Bengio）" />
-        <input type="text" id="extractAffil" placeholder="所属机构（如：University of Montreal）" />
-        <button class="btn btn-primary btn-sm" onclick="extractPersona()" id="extractBtn">🎯 提取 Persona</button>
+      <div class="messages" id="messages">
+
+        <!-- ============= 欢迎 / 设置页面 ============= -->
+        <div id="welcomeScreen">
+
+          <div class="welcome-hero">
+            <span class="eyebrow">Mock Interview</span>
+            <h2>开启一场<br/>认真的<i>模拟面试</i>。</h2>
+            <p>选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。</p>
+          </div>
+
+          <!-- 步骤 01 — 选择面试官 -->
+          <div class="setup-section">
+            <div class="num">01</div>
+            <div class="body">
+              <h3>选择面试官</h3>
+              <p class="helper">从内置人格中挑选，或在下方蒸馏出一位真实导师作为面试官。</p>
+              <div class="persona-list" id="personaList"></div>
+            </div>
+          </div>
+
+          <!-- 步骤 02 — 导师蒸馏 -->
+          <div class="setup-section">
+            <div class="num">02</div>
+            <div class="body">
+              <h3>蒸馏一位导师 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper">输入导师姓名与所属机构，自动提取其学术风格生成专属面试官。</p>
+              <div class="extract-form">
+                <input type="text" id="extractName" placeholder="导师姓名（如 Yoshua Bengio）" />
+                <input type="text" id="extractAffil" placeholder="所属机构（如 University of Montreal）" />
+                <button class="btn btn-outline btn-sm" onclick="extractPersona()" id="extractBtn">提取 Persona</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 步骤 03 — 个人简历（可选） -->
+          <div class="setup-section">
+            <div class="num">03</div>
+            <div class="body">
+              <h3>上传个人简历 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper">上传你的简历，面试官将会阅读并基于你的经历提问，让面试更贴合你的背景。</p>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <label class="btn btn-outline" style="cursor:pointer;display:inline-flex">
+                  📄 选择文件
+                  <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleResumeFile(event)" />
+                </label>
+                <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)">尚未上传</span>
+              </div>
+              <div id="resumeInfo" style="display:none;margin-top:4px">
+                <span style="font-size:12px;color:var(--ink-3)">已上传：</span>
+                <span id="resumeName" style="font-size:12px;font-weight:500;color:var(--ink)"></span>
+                <button class="btn btn-sm btn-outline" style="margin-left:8px;padding:2px 10px" onclick="deleteResume()">删除</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 步骤 04 — 面试方向 -->
+          <div class="setup-section">
+            <div class="num">04</div>
+            <div class="body">
+              <h3>面试方向</h3>
+              <p class="helper">这将决定面试官提问的领域与深度。</p>
+              <div class="field-input">
+                <label>目标专业方向</label>
+                <select id="fieldSelect">
+                  <option value="__professor_field__" style="display:none">该教授自身专业</option>
+                  <option value="计算机科学 / 人工智能">计算机科学 / 人工智能</option>
+                  <option value="数据科学 / 机器学习">数据科学 / 机器学习</option>
+                  <option value="自然语言处理">自然语言处理</option>
+                  <option value="计算机视觉">计算机视觉</option>
+                  <option value="网络安全">网络安全</option>
+                  <option value="软件工程">软件工程</option>
+                  <option value="自动化">自动化</option>
+                  <option value="机器人学">机器人学</option>
+                  <option value="生物信息学">生物信息学</option>
+                  <option value="认知科学">认知科学</option>
+                  <option value="计算神经科学">计算神经科学</option>
+                  <option value="经济学">经济学</option>
+                  <option value="管理学">管理学</option>
+                  <option value="管理科学与工程">管理科学与工程</option>
+                  <option value="统计学">统计学</option>
+                  <option value="物理">物理</option>
+                  <option value="数学">数学</option>
+                  <option value="化学">化学</option>
+                  <option value="生物学">生物学</option>
+                  <option value="医学">医学</option>
+                  <option value="法学">法学</option>
+                  <option value="教育学">教育学</option>
+                  <option value="心理学">心理学</option>
+                  <option value="其他（请自定义）">其他</option>
+                </select>
+                <input type="text" id="customField" placeholder="自定义方向" style="display:none;margin-top:8px" />
+              </div>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button class="btn" onclick="startInterview()" id="startBtn">开始面试 →</button>
+            <span style="font-size:12.5px;color:var(--ink-4)">回车键发送回答 · 支持语音输入</span>
+          </div>
+
+        </div>
+        <!-- /welcomeScreen -->
+
       </div>
-    </div>
+      <!-- /messages -->
 
-    <div class="sidebar-section">
-      <h2>📚 面试方向</h2>
-      <div class="field-input">
-        <label>目标专业方向</label>
-        <select id="fieldSelect">
-          <option value="__professor_field__" style="display:none;color:var(--primary);font-weight:600">🎓 该教授自身专业</option>
-          <option value="计算机科学 / 人工智能">计算机科学 / 人工智能</option>
-          <option value="数据科学 / 机器学习">数据科学 / 机器学习</option>
-          <option value="自然语言处理">自然语言处理</option>
-          <option value="计算机视觉">计算机视觉</option>
-          <option value="网络安全">网络安全</option>
-          <option value="软件工程">软件工程</option>
-          <option value="自动化">自动化</option>
-          <option value="机器人学">机器人学</option>
-          <option value="生物信息学">生物信息学</option>
-          <option value="认知科学">认知科学</option>
-          <option value="计算神经科学">计算神经科学</option>
-          <option value="经济学">经济学</option>
-          <option value="管理学">管理学</option>
-          <option value="管理科学与工程">管理科学与工程</option>
-          <option value="统计学">统计学</option>
-          <option value="物理">物理</option>
-          <option value="数学">数学</option>
-          <option value="化学">化学</option>
-          <option value="生物学">生物学</option>
-          <option value="医学">医学</option>
-          <option value="法学">法学</option>
-          <option value="教育学">教育学</option>
-          <option value="心理学">心理学</option>
-          <option value="其他（请自定义）">其他</option>
-        </select>
-        <input type="text" id="customField" placeholder="自定义方向" style="display:none;margin-top:8px" />
-        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="startInterview()" id="startBtn">
-          ▶ 开始面试
-        </button>
+      <!-- 聊天状态栏 -->
+      <div class="chat-status" id="chatStatus" style="display:none">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">就绪</span>
       </div>
-    </div>
-  </div>
 
-  <!-- Chat Area -->
-  <div class="chat-area">
-    <div class="chat-status" id="chatStatus" style="display:none">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">就绪</span>
-    </div>
-
-    <div class="messages" id="messages">
-      <div class="welcome" id="welcomeScreen">
-        <div class="icon">🎙️</div>
-        <h2>准备好面试练习了吗？</h2>
-        <p>1. 在左侧选择一个面试官人格，或通过"导师蒸馏"创建专属面试官<br/>
-        2. 选择你的目标专业方向<br/>
-        3. 点击「开始面试」开始模拟</p>
-        <p style="margin-top:12px;font-size:12px;color:var(--text-muted)">💡 支持：通用人格 · 导师蒸馏 · 多轮对话 · 自动生成反馈</p>
+      <!-- 底部输入区 -->
+      <div class="input-area" id="inputArea" style="display:none">
+        <div class="input-wrapper">
+          <textarea id="messageInput" rows="1" placeholder="输入你的回答..." disabled></textarea>
+          <span class="stt-mode" id="sttModeLabel" onclick="toggleSTTMode()" title="切换语音识别模式">浏览器识别</span>
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入" disabled>●</button>
+          <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">发送</button>
+        </div>
       </div>
-    </div>
 
-    <div class="input-area" id="inputArea" style="display:none">
-      <textarea id="messageInput" rows="2" placeholder="输入你的回答..." disabled></textarea>
-      <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">发送</button>
     </div>
   </div>
 
 </div>
 
-<!-- Feedback Modal -->
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #1：首次引导（Onboarding）            -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="onboardingModal">
+  <div class="modal">
+    <h2>欢迎使用 Interview Mate</h2>
+    <p style="margin-bottom:24px">
+      是否有相关的项目背景文件？例如「金融硕士项目」「管科博士项目」等。
+      <br/>上传后，面试官将根据您的项目背景进行针对性提问。
+    </p>
+    <div class="form-group">
+      <label>上传项目背景文件（PDF / TXT）</label>
+      <input type="file" id="onboardingFileInput" accept=".pdf,.txt,.md" onchange="handleOnboardingFile(event)" />
+      <div id="onboardingFileInfo" style="display:none;margin-top:10px">
+        <div class="file-info">
+          <span id="onboardingFileName"></span>
+          <button class="remove-file" onclick="clearOnboardingFile()">移除</button>
+        </div>
+      </div>
+      <div class="skip-hint">💡 也可以跳过，稍后在 ⚙️ 设置中上传</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="skipOnboarding()">暂时跳过</button>
+      <button class="btn btn-primary" onclick="confirmOnboarding()" id="onboardingConfirmBtn">确认并开始使用</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #2：设置（Settings）                  -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>⚙️ 设置</h2>
+
+    <!-- 项目背景文件 -->
+    <div class="form-group">
+      <label>项目背景文件</label>
+      <div id="settingsBgInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传背景文件</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" onchange="handleSettingsFile(event)" />
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsFileInput').click()">上传文件</button>
+        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteBackgroundFile()" id="settingsDeleteBg" style="display:none">删除文件</button>
+      </div>
+    </div>
+
+    <!-- 个人简历 -->
+    <div class="form-group">
+      <label>个人简历</label>
+      <div id="settingsResumeInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传简历</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleSettingsResume(event)" />
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsResumeInput').click()">上传简历</button>
+        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteSettingsResume()" id="settingsDeleteResume" style="display:none">删除简历</button>
+      </div>
+    </div>
+
+    <!-- 当前面试官 -->
+    <div class="form-group">
+      <label>当前面试官</label>
+      <div id="settingsPersonaInfo" style="font-size:13px;color:var(--ink-3);padding:6px 0">
+        未选择面试官
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn" onclick="closeSettings()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #3：面试反馈报告                      -->
+<!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="feedbackModal">
   <div class="modal">
-    <h2>📊 面试评估报告</h2>
+    <h2>面试评估报告</h2>
     <div class="feedback-content" id="feedbackContent">加载中...</div>
-    <button class="btn btn-primary close-btn" onclick="closeFeedback()">关闭</button>
+    <div style="display:flex;gap:10px;margin-top:28px">
+      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="downloadSummary()" id="downloadSummaryBtn">📥 下载面试总结</button>
+      <button class="btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" onclick="closeFeedback()">关闭并回到首页</button>
+    </div>
   </div>
 </div>
 
-<!-- Persona Detail Modal -->
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #4：导师详情                          -->
+<!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="personaDetailModal">
   <div class="modal">
-    <h2>🎓 导师画像详情</h2>
+    <h2>导师画像</h2>
     <div id="personaDetailContent">
-      <div class="detail-loading" style="text-align:center;padding:40px;color:var(--text-muted)">加载中...</div>
+      <div style="text-align:center;padding:40px;color:var(--ink-3)">加载中...</div>
     </div>
-    <button class="btn btn-primary close-btn" onclick="closePersonaDetail()">关闭</button>
+    <button class="btn close-btn" onclick="closePersonaDetail()">关闭</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #5：报告生成中                       -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="loadingModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">⏳</div>
+    <h2 style="margin-bottom:8px">报告生成中...</h2>
+    <p style="font-size:14px;color:var(--ink-3)">正在分析您的面试表现，请稍候</p>
+    <div class="spinner" style="margin:24px auto 0;width:24px;height:24px;border-width:3px"></div>
   </div>
 </div>
 
 <script>
-// ── 状态管理 ──────────────────────────────────
+// ══════════════════════════════════════════════════
+// 状态管理
+// ══════════════════════════════════════════════════
+
 const API = window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8000'
   : ''; // 同域部署
 
 const state = {
   personaId: null,
+  personaName: null,
   sessionId: null,
   field: '',
   isInterviewing: false,
   isLoading: false,
   extractedPersonas: {},
-  currentResearchAreas: []
+  currentResearchAreas: [],
+  // 背景文件状态（内存中缓存）
+  backgroundFileName: null,
+  backgroundFile: null // 用于暂存未上传的文件（onboarding流程）
 };
 
-// ── 初始化 ────────────────────────────────────
+// ══════════════════════════════════════════════════
+// localStorage 工具函数
+// ══════════════════════════════════════════════════
+
+function getStorage(key, defaultVal) {
+  try {
+    const val = localStorage.getItem('interviewmate_' + key);
+    return val !== null ? JSON.parse(val) : defaultVal;
+  } catch(e) {
+    return defaultVal;
+  }
+}
+
+function setStorage(key, val) {
+  try {
+    localStorage.setItem('interviewmate_' + key, JSON.stringify(val));
+  } catch(e) {
+    // localStorage 满了就忽略
+  }
+}
+
+function removeStorage(key) {
+  try {
+    localStorage.removeItem('interviewmate_' + key);
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════
+// 初始化
+// ══════════════════════════════════════════════════
+
 async function init() {
   await loadPersonas();
   setupEventListeners();
+  setupSpeechInput();
+  await loadResumeStatus();
+
+  // 读取 localStorage 状态
+  const hasOnboarded = getStorage('hasOnboarded', false);
+  const lastPersonaId = getStorage('lastPersonaId', null);
+
+  // 如果尚未完成引导，显示引导弹窗
+  if (!hasOnboarded) {
+    setTimeout(() => openOnboarding(), 500);
+    return;
+  }
+
+  // 如果已经完成引导且有上次面试记录，自动进入面试界面
+  if (hasOnboarded && lastPersonaId) {
+    // 尝试恢复上次的面试官选择和方向
+    const lastField = getStorage('lastField', null);
+    state.personaId = lastPersonaId;
+
+    // 选中对应的面试官卡片
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.persona-card');
+      let found = false;
+      cards.forEach(c => {
+        if (c.dataset.id === lastPersonaId) {
+          selectPersona(lastPersonaId, c);
+          found = true;
+        }
+      });
+      // 如果没找到（可能已被删除），选中第一个
+      if (!found) {
+        const first = cards[0];
+        if (first) selectPersona(first.dataset.id, first);
+      }
+
+      // 恢复方向选择
+      if (lastField) {
+        const fieldSelect = document.getElementById('fieldSelect');
+        const options = fieldSelect.options;
+        let fieldFound = false;
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].value === lastField) {
+            fieldSelect.selectedIndex = i;
+            fieldFound = true;
+            break;
+          }
+        }
+        if (!fieldFound && lastField) {
+          // 自定义方向
+          fieldSelect.value = '其他（请自定义）';
+          document.getElementById('customField').value = lastField;
+        }
+        fieldSelect.dispatchEvent(new Event('change'));
+      }
+
+      // 只恢复选择，不自动开始——等用户点击「开始面试」按钮
+    }, 200);
+  }
 }
+
+// ══════════════════════════════════════════════════
+// 面试官加载与渲染
+// ══════════════════════════════════════════════════
 
 async function loadPersonas() {
   try {
@@ -606,7 +964,7 @@ async function loadPersonas() {
     renderPersonas(data.personas);
   } catch(e) {
     console.error('加载面试官列表失败', e);
-    // 用默认数据兜底
+    // 兜底数据
     renderPersonas({
       strict: { id:'strict', name:'严厉型', description:'要求严格，喜欢追问细节', type:'general', avatar_emoji:'😤' },
       gentle: { id:'gentle', name:'温和型', description:'鼓励式引导，会给出提示', type:'general', avatar_emoji:'😊' },
@@ -682,6 +1040,7 @@ function selectPersona(id, el) {
   document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   state.personaId = id;
+  state.personaName = el ? el.querySelector('.name').textContent : id;
 
   // 处理面试方向下拉：如果是已蒸馏的导师，显示并自动选中"该教授自身专业"
   const fieldSelect = document.getElementById('fieldSelect');
@@ -690,7 +1049,6 @@ function selectPersona(id, el) {
 
   if (isExtracted && profOption) {
     profOption.style.display = 'block';
-    // 存储该导师的研究方向以备后用
     try {
       state.currentResearchAreas = JSON.parse(el.dataset.researchAreas || '[]');
     } catch(e) {
@@ -700,13 +1058,11 @@ function selectPersona(id, el) {
   } else if (profOption) {
     profOption.style.display = 'none';
     state.currentResearchAreas = [];
-    // 如果当前选中的就是该选项且不再适用，切回第一个常规选项
     if (fieldSelect.value === '__professor_field__') {
-      fieldSelect.selectedIndex = 1; // 第一个常规选项
+      fieldSelect.selectedIndex = 1;
     }
   }
 
-  // 触发 change 事件，处理自定义输入显示
   fieldSelect.dispatchEvent(new Event('change'));
 }
 
@@ -715,7 +1071,6 @@ function setupEventListeners() {
   const customField = document.getElementById('customField');
   fieldSelect.addEventListener('change', () => {
     customField.style.display = fieldSelect.value === '其他（请自定义）' ? 'block' : 'none';
-    // 如果是"该教授自身专业"，不显示自定义输入
     if (fieldSelect.value === '__professor_field__') {
       customField.style.display = 'none';
     }
@@ -730,7 +1085,10 @@ function setupEventListeners() {
   });
 }
 
-// ── Persona Extraction ────────────────────────
+// ══════════════════════════════════════════════════
+// Persona Extraction (导师蒸馏)
+// ══════════════════════════════════════════════════
+
 async function extractPersona() {
   const name = document.getElementById('extractName').value.trim();
   const affiliation = document.getElementById('extractAffil').value.trim();
@@ -773,7 +1131,10 @@ async function extractPersona() {
   }
 }
 
-// ── Persona 详情 ──────────────────────────────
+// ══════════════════════════════════════════════════
+// Persona 详情
+// ══════════════════════════════════════════════════
+
 async function viewPersonaDetail(id) {
   const modal = document.getElementById('personaDetailModal');
   const content = document.getElementById('personaDetailContent');
@@ -789,52 +1150,52 @@ async function viewPersonaDetail(id) {
     }
 
     content.innerHTML = `
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)">
         <div style="font-size:48px">🎓</div>
         <div>
           <div style="font-size:20px;font-weight:700">${p.name}</div>
-          <div style="color:var(--text-muted);font-size:14px">${p.title || '教授'} @ ${p.affiliation}</div>
+          <div style="color:var(--ink-3);font-size:14px">${p.title || '教授'} @ ${p.affiliation}</div>
         </div>
       </div>
 
       <table style="width:100%;border-collapse:collapse">
         <tr>
-          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top">研究方向</td>
-          <td style="padding:10px 12px">${(p.research_areas || []).map(r => `<span style="display:inline-block;background:#eef2ff;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px">${r}</span>`).join('')}</td>
+          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top;color:var(--ink-3)">研究方向</td>
+          <td style="padding:10px 12px">${(p.research_areas || []).map(r => `<span style="display:inline-block;background:var(--paper);border:1px solid var(--line);padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:var(--ink-2)">${r}</span>`).join('')}</td>
         </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top">研究风格</td>
-          <td style="padding:10px 12px;color:var(--text-muted)">${p.research_style || '分析中...'}</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">研究风格</td>
+          <td style="padding:10px 12px;color:var(--ink-2)">${p.research_style || '分析中...'}</td>
         </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top">指导风格</td>
-          <td style="padding:10px 12px;color:var(--text-muted)">${p.teaching_style || '分析中...'}</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">指导风格</td>
+          <td style="padding:10px 12px;color:var(--ink-2)">${p.teaching_style || '分析中...'}</td>
         </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top">性格特征</td>
-          <td style="padding:10px 12px">${(p.personality_traits || []).map(t => `<span style="display:inline-block;background:#fef3c7;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px">${t}</span>`).join('')}</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">性格特征</td>
+          <td style="padding:10px 12px">${(p.personality_traits || []).map(t => `<span style="display:inline-block;background:#FEF3C7;border:1px solid #FDE68A;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:#92400E">${t}</span>`).join('')}</td>
         </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--border)"></td></tr>
+        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top">典型问题</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">典型问题</td>
           <td style="padding:10px 12px">
-            <ol style="margin:0;padding-left:20px;font-size:13px;color:var(--text)">
-              ${(p.typical_questions || []).map(q => `<li style="margin-bottom:4px">${q}</li>`).join('')}
+            <ol style="margin:0;padding-left:20px;font-size:13px">
+              ${(p.typical_questions || []).map(q => `<li style="margin-bottom:4px;color:var(--ink-2)">${q}</li>`).join('')}
             </ol>
           </td>
         </tr>
       </table>
 
       <details style="margin-top:20px">
-        <summary style="cursor:pointer;font-size:13px;color:var(--text-muted)">🤖 查看 LLM 风格指令</summary>
-        <pre style="background:#f8f9fa;padding:12px;border-radius:8px;font-size:12px;margin-top:8px;white-space:pre-wrap;word-break:break-word">${(p.style_prompt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+        <summary style="cursor:pointer;font-size:13px;color:var(--ink-4)">🤖 查看 LLM 风格指令</summary>
+        <pre style="background:var(--paper);padding:12px;border-radius:8px;font-size:12px;margin-top:8px;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)">${(p.style_prompt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
       </details>
     `;
   } catch(e) {
-    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--strict)">❌ 加载失败: ${e.message}</div>`;
+    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">❌ 加载失败: ${e.message}</div>`;
   }
 }
 
@@ -842,7 +1203,75 @@ function closePersonaDetail() {
   document.getElementById('personaDetailModal').classList.remove('show');
 }
 
-// ── 删除导师 ────────────────────────────────
+// ══════════════════════════════════════════════════
+// 个人简历上传
+// ══════════════════════════════════════════════════
+
+function handleResumeFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  uploadResume(file);
+}
+
+async function uploadResume(file) {
+  const status = document.getElementById('resumeStatus');
+  status.textContent = '⏳ 上传中...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`${API}/api/resume/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '上传失败');
+    }
+    const data = await res.json();
+
+    document.getElementById('resumeStatus').textContent = '✅ 已上传';
+    document.getElementById('resumeName').textContent = data.filename;
+    document.getElementById('resumeInfo').style.display = '';
+    showToast('✅ 简历上传成功', 'success');
+  } catch (e) {
+    document.getElementById('resumeStatus').textContent = '❌ 上传失败';
+    showToast('❌ 简历上传失败: ' + e.message, 'error');
+  }
+}
+
+async function deleteResume() {
+  try {
+    const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('删除失败');
+    document.getElementById('resumeStatus').textContent = '尚未上传';
+    document.getElementById('resumeInfo').style.display = 'none';
+    document.getElementById('resumeFileInput').value = '';
+    showToast('🗑️ 简历已删除', 'success');
+  } catch (e) {
+    showToast('❌ 删除失败: ' + e.message, 'error');
+  }
+}
+
+async function loadResumeStatus() {
+  try {
+    const res = await fetch(`${API}/api/resume`);
+    const data = await res.json();
+    if (data.has_resume) {
+      document.getElementById('resumeStatus').textContent = '✅ 已上传';
+      document.getElementById('resumeName').textContent = data.filename;
+      document.getElementById('resumeInfo').style.display = '';
+    }
+  } catch (e) {
+    // 忽略
+  }
+}
+
+// ══════════════════════════════════════════════════
+// 删除导师
+// ══════════════════════════════════════════════════
+
 async function deletePersona(id, name) {
   if (!confirm(`确定要删除导师 "${name}" 的面试官画像吗？（删除后不可恢复）`)) return;
   try {
@@ -852,9 +1281,7 @@ async function deletePersona(id, name) {
       throw new Error(data.detail || '删除失败');
     }
     showToast(`🗑️ 已删除 "${name}"`, 'success');
-    // 刷新列表
     await loadPersonas();
-    // 如果当前选中的就是被删的，取消选中
     if (state.personaId === id) {
       state.personaId = null;
       const firstCard = document.querySelector('.persona-card');
@@ -865,7 +1292,10 @@ async function deletePersona(id, name) {
   }
 }
 
-// ── Toast 通知 ────────────────────────────────
+// ══════════════════════════════════════════════════
+// Toast 通知
+// ══════════════════════════════════════════════════
+
 function showToast(message, type = 'success') {
   let container = document.querySelector('.toast-container');
   if (!container) {
@@ -886,7 +1316,232 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// ── 面试流程 ──────────────────────────────────
+// ══════════════════════════════════════════════════
+// 首次引导弹窗（Onboarding）
+// ══════════════════════════════════════════════════
+
+function openOnboarding() {
+  document.getElementById('onboardingModal').classList.add('show');
+}
+
+function closeOnboarding() {
+  document.getElementById('onboardingModal').classList.remove('show');
+}
+
+/**
+ * 处理引导弹窗中的文件选择
+ */
+function handleOnboardingFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  state.backgroundFile = file;
+  document.getElementById('onboardingFileName').textContent = '📄 ' + file.name;
+  document.getElementById('onboardingFileInfo').style.display = 'block';
+}
+
+function clearOnboardingFile() {
+  state.backgroundFile = null;
+  document.getElementById('onboardingFileInput').value = '';
+  document.getElementById('onboardingFileInfo').style.display = 'none';
+}
+
+/**
+ * 跳过引导
+ */
+function skipOnboarding() {
+  // 标记已引导
+  setStorage('hasOnboarded', true);
+  closeOnboarding();
+  showToast('👋 可以在设置中随时上传背景文件', 'success');
+}
+
+/**
+ * 确认引导（可能上传文件或跳过）
+ */
+async function confirmOnboarding() {
+  // 如果有选文件，上传到后端
+  if (state.backgroundFile) {
+    try {
+      const formData = new FormData();
+      formData.append('file', state.backgroundFile);
+      const res = await fetch(`${API}/api/background/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || '上传失败');
+      }
+      const data = await res.json();
+      state.backgroundFileName = data.filename;
+      showToast(`✅ 已上传: ${data.filename}`, 'success');
+    } catch(e) {
+      showToast('❌ 上传失败: ' + e.message, 'error');
+    }
+  }
+
+  // 标记已引导
+  setStorage('hasOnboarded', true);
+  closeOnboarding();
+}
+
+// ══════════════════════════════════════════════════
+// 设置弹窗
+// ══════════════════════════════════════════════════
+
+function openSettings() {
+  // 刷新背景文件信息
+  updateSettingsUI();
+  document.getElementById('settingsModal').classList.add('show');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('show');
+}
+
+/**
+ * 更新设置弹窗中的信息
+ */
+async function updateSettingsUI() {
+  // 1. 背景文件信息
+  try {
+    const res = await fetch(`${API}/api/background`);
+    const data = await res.json();
+    const bgInfo = document.getElementById('settingsBgInfo');
+    const deleteBtn = document.getElementById('settingsDeleteBg');
+
+    if (data.has_background) {
+      bgInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} 字符)</span></div>`;
+      deleteBtn.style.display = 'inline-block';
+    } else {
+      bgInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传背景文件</div>';
+      deleteBtn.style.display = 'none';
+    }
+  } catch(e) {
+    document.getElementById('settingsBgInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">查询失败</div>';
+  }
+
+  // 2. 面试官信息
+  const personaInfo = document.getElementById('settingsPersonaInfo');
+  if (state.personaId) {
+    const activeCard = document.querySelector('.persona-card.active');
+    if (activeCard) {
+      const name = activeCard.querySelector('.name').textContent;
+      personaInfo.innerHTML = `<span class="bg-badge">${name}</span>`;
+    } else {
+      personaInfo.innerHTML = `<span style="font-size:13px;color:var(--ink-3)">${state.personaId}</span>`;
+    }
+  } else {
+    personaInfo.innerHTML = '<span style="font-size:13px;color:var(--ink-4)">未选择面试官</span>';
+  }
+
+  // 3. 简历信息
+  try {
+    const res = await fetch(`${API}/api/resume`);
+    const data = await res.json();
+    const resumeInfo = document.getElementById('settingsResumeInfo');
+    const deleteBtn = document.getElementById('settingsDeleteResume');
+
+    if (data.has_resume) {
+      resumeInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} 字符)</span></div>`;
+      deleteBtn.style.display = 'inline-block';
+    } else {
+      resumeInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传简历</div>';
+      deleteBtn.style.display = 'none';
+    }
+  } catch(e) {
+    document.getElementById('settingsResumeInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">查询失败</div>';
+  }
+}
+
+/**
+ * 处理设置弹窗中的文件选择
+ */
+async function handleSettingsFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`${API}/api/background/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '上传失败');
+    }
+    const data = await res.json();
+    state.backgroundFileName = data.filename;
+    showToast(`✅ 已上传: ${data.filename}`, 'success');
+    updateSettingsUI();
+  } catch(e) {
+    showToast('❌ 上传失败: ' + e.message, 'error');
+  }
+
+  event.target.value = ''; // 重置 input
+}
+
+/**
+ * 删除背景文件
+ */
+async function deleteBackgroundFile() {
+  if (!confirm('确定删除背景文件吗？')) return;
+  try {
+    const res = await fetch(`${API}/api/background`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('删除失败');
+    state.backgroundFileName = null;
+    showToast('🗑️ 背景文件已删除', 'success');
+    updateSettingsUI();
+  } catch(e) {
+    showToast('❌ 删除失败: ' + e.message, 'error');
+  }
+}
+
+// ── 设置弹窗：简历操作 ──────────────────────────
+
+async function handleSettingsResume(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`${API}/api/resume/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || '上传失败');
+    }
+    showToast('✅ 简历上传成功', 'success');
+    updateSettingsUI();
+  } catch (e) {
+    showToast('❌ 简历上传失败: ' + e.message, 'error');
+  }
+}
+
+async function deleteSettingsResume() {
+  if (!confirm('确定删除简历吗？')) return;
+  try {
+    const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('删除失败');
+    showToast('🗑️ 简历已删除', 'success');
+    updateSettingsUI();
+  } catch(e) {
+    showToast('❌ 删除失败: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════
+// 面试流程
+// ══════════════════════════════════════════════════
+
 async function startInterview() {
   if (!state.personaId) { alert('请先选择一个面试官人格'); return; }
 
@@ -894,7 +1549,6 @@ async function startInterview() {
   const customField = document.getElementById('customField');
   
   if (fieldSelect.value === '__professor_field__') {
-    // 使用该导师自身专业方向
     state.field = state.currentResearchAreas.length > 0
       ? state.currentResearchAreas.join(' / ')
       : '人工智能';
@@ -903,15 +1557,35 @@ async function startInterview() {
   }
   if (!state.field) { alert('请输入/选择目标专业方向'); return; }
 
+  // 保存到 localStorage（用于下次自动恢复）
+  setStorage('lastPersonaId', state.personaId);
+  setStorage('lastField', state.field);
+
   const btn = document.getElementById('startBtn');
   btn.disabled = true;
   btn.textContent = '⏳ 连接中...';
 
   try {
+    // 构建请求体，如果有背景文件则携带 content
+    const body = {
+      persona_id: state.personaId,
+      field: state.field
+    };
+
+    // 从后端获取背景文件内容
+    try {
+      const bgRes = await fetch(`${API}/api/background`);
+      const bgData = await bgRes.json();
+      if (bgData.has_background) {
+        // 后端会在 start_interview 中自动读取，所以这里不需要传 background 字段
+        // 但为了显式控制，也尝试传入
+      }
+    } catch(e) {}
+
     const res = await fetch(`${API}/api/interview/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ persona_id: state.personaId, field: state.field })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (data.error) { throw new Error(data.error); }
@@ -928,9 +1602,8 @@ async function startInterview() {
 
     updateStatus('面试进行中', 'dot');
 
-    document.getElementById('messageInput').disabled = false;
+    setInputEnabled(true);
     document.getElementById('messageInput').focus();
-    document.getElementById('sendBtn').disabled = false;
 
     // 显示第一个问题
     addMessage('interviewer', data.question);
@@ -980,6 +1653,9 @@ async function endInterview() {
   setInputEnabled(false);
   updateStatus('生成反馈报告中...', 'pending');
 
+  // 显示加载弹窗
+  document.getElementById('loadingModal').classList.add('show');
+
   try {
     const res = await fetch(`${API}/api/interview/end`, {
       method: 'POST',
@@ -989,9 +1665,14 @@ async function endInterview() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
+    // 隐藏加载弹窗，显示反馈弹窗
+    document.getElementById('loadingModal').classList.remove('show');
     showFeedback(data.feedback);
+    goToWelcomeScreen();
   } catch(e) {
+    document.getElementById('loadingModal').classList.remove('show');
     alert('生成反馈失败: ' + e.message);
+    goToWelcomeScreen();
   }
 
   state.isInterviewing = false;
@@ -1002,20 +1683,48 @@ async function endInterview() {
   document.getElementById('startBtn').textContent = '▶ 开始面试';
 }
 
-// ── UI 辅助 ──────────────────────────────────
+/**
+ * 从面试界面回到欢迎页（点击 logo）
+ */
+function returnToSetup() {
+  if (!state.isInterviewing) return;
+
+  if (!confirm('确定退出当前面试吗？对话记录将被保留至结束面试。')) return;
+
+  state.isInterviewing = false;
+  // 不清除 sessionId，这样数据还在，但用户回到欢迎页
+  document.getElementById('welcomeScreen').style.display = '';
+  document.getElementById('chatStatus').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('endBtn').style.display = 'none';
+  document.getElementById('startBtn').textContent = '▶ 开始面试';
+
+  // 清空消息列表（保留欢迎页）
+  const messages = document.getElementById('messages');
+  const welcome = document.getElementById('welcomeScreen');
+  // 只清除 welcome 之外的消息
+  Array.from(messages.children).forEach(child => {
+    if (child !== welcome && child.id !== 'welcomeScreen') {
+      child.remove();
+    }
+  });
+  welcome.style.display = '';
+}
+
+// ══════════════════════════════════════════════════
+// UI 辅助函数
+// ══════════════════════════════════════════════════
+
 function addMessage(role, text) {
   const container = document.getElementById('messages');
   const msg = document.createElement('div');
   msg.className = `message ${role}`;
 
-  const avatar = role === 'interviewer'
-    ? '<div class="avatar">🎙️</div>'
-    : '<div class="avatar">我</div>';
-
-  const label = role === 'interviewer' ? '面试官' : '你';
+  const label = role === 'interviewer'
+    ? (state.personaName ? `面试官 · ${state.personaName}` : '面试官')
+    : '你';
 
   msg.innerHTML = `
-    ${avatar}
     <div class="bubble">
       <div class="label">${label}</div>
       ${text}
@@ -1028,6 +1737,7 @@ function addMessage(role, text) {
 function setInputEnabled(enabled) {
   document.getElementById('messageInput').disabled = !enabled;
   document.getElementById('sendBtn').disabled = !enabled;
+  document.getElementById('micBtn').disabled = !enabled;
 }
 
 function updateStatus(text, dotClass) {
@@ -1036,17 +1746,326 @@ function updateStatus(text, dotClass) {
   dot.className = 'dot' + (dotClass ? ' ' + dotClass : '');
 }
 
+let _lastFeedback = '';  // 缓存最后一份面试反馈，供下载使用
+
 function showFeedback(feedback) {
+  _lastFeedback = feedback;
   document.getElementById('feedbackContent').textContent = feedback;
   document.getElementById('feedbackModal').classList.add('show');
 }
 
 function closeFeedback() {
   document.getElementById('feedbackModal').classList.remove('show');
+  // 关闭弹窗后回到欢迎页
+  goToWelcomeScreen();
 }
 
-// ── Bootstrap ─────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
+function downloadSummary() {
+  if (!_lastFeedback) {
+    showToast('❌ 没有可下载的面试总结', 'error');
+    return;
+  }
+
+  // 构建下载内容
+  const now = new Date();
+  const timestamp = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const content = `=== Interview Mate — 面试评估报告 ===\n\n` +
+    `日期: ${timestamp}\n` +
+    `面试官: ${state.personaName || '未知'}\n` +
+    `方向: ${state.field || '未知'}\n` +
+    `${'='.repeat(40)}\n\n` +
+    `${_lastFeedback}`;
+
+  // 生成并下载文件
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const dateStr = now.toISOString().slice(0, 10);
+  a.download = `interview-report-${dateStr}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast('📥 面试总结已下载', 'success');
+}
+
+/**
+ * 回到欢迎页，清空聊天消息
+ */
+function goToWelcomeScreen() {
+  document.getElementById('welcomeScreen').style.display = '';
+  document.getElementById('chatStatus').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('endBtn').style.display = 'none';
+  document.getElementById('startBtn').textContent = '▶ 开始面试';
+
+  // 清空所有聊天消息（保留欢迎页）
+  const messages = document.getElementById('messages');
+  const welcome = document.getElementById('welcomeScreen');
+  Array.from(messages.children).forEach(child => {
+    if (child !== welcome && child.id !== 'welcomeScreen') {
+      child.remove();
+    }
+  });
+  welcome.style.display = '';
+}
+
+// ══════════════════════════════════════════════════
+// 语音输入（STT）
+// ══════════════════════════════════════════════════
+
+let recognition = null;
+let mediaRecorder = null;
+let recordingStream = null;
+let isRecording = false;
+let recognitionFinalBuf = '';
+let useBackendSTT = false;
+// 自动检测 Web Speech API 可用性
+const hasWebSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+function setupSpeechInput() {
+  const micBtn = document.getElementById('micBtn');
+  const label = document.getElementById('sttModeLabel');
+
+  if (hasWebSpeech) {
+    // 🅰️ 浏览器原生语音识别 (Chrome/Edge) — 默认首选
+    useBackendSTT = false;
+    initWebSpeech();
+    updateSTTLabel();
+  } else {
+    // 浏览器不支持 Web Speech → 强制后端模式
+    useBackendSTT = true;
+    micBtn.title = '录制音频发往后端转写';
+    updateSTTLabel();
+  }
+}
+
+function initWebSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'zh-CN';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    recognitionFinalBuf = '';
+    document.getElementById('micBtn').textContent = '⏹️';
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micBtn').title = '点击停止录音';
+    updateStatus('🎤 录音中...', 'pending');
+  };
+
+  recognition.onresult = (event) => {
+    let interimText = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      if (result.isFinal) {
+        recognitionFinalBuf += result[0].transcript;
+      } else {
+        interimText += result[0].transcript;
+      }
+    }
+    const input = document.getElementById('messageInput');
+    if (recognitionFinalBuf) {
+      input.value = recognitionFinalBuf;
+    }
+    input.placeholder = interimText ? interimText + '...' : '输入你的回答...';
+  };
+
+  recognition.onerror = (event) => {
+    if (event.error === 'not-allowed') {
+      stopRecording();
+      showToast('🎤 麦克风权限被拒绝，请在浏览器设置中允许', 'error');
+    } else if (event.error === 'service-not-allowed') {
+      stopRecording();
+      showToast('🌐 浏览器语音服务不可用，已自动切换为「后端转写」模式', 'error');
+      switchToBackendSTT();
+    } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+      stopRecording();
+      showToast('🎤 识别出错，已切换为「后端转写」模式: ' + event.error, 'error');
+      switchToBackendSTT();
+    }
+  };
+
+  recognition.onend = () => {
+    if (isRecording) {
+      try { recognition.start(); } catch(e) {}
+    }
+  };
+}
+
+function switchToBackendSTT() {
+  useBackendSTT = true;
+  updateSTTLabel();
+  document.getElementById('micBtn').title = '录制音频发往后端转写';
+}
+
+function updateSTTLabel() {
+  const label = document.getElementById('sttModeLabel');
+  if (useBackendSTT) {
+    label.innerHTML = '🔧 后端转写';
+    label.className = 'stt-mode backend';
+    label.title = '点击切换到浏览器语音识别';
+  } else {
+    label.innerHTML = '🌐 浏览器识别';
+    label.className = 'stt-mode';
+    label.title = hasWebSpeech
+      ? '点击切换到后端转写（国内网络推荐）'
+      : '浏览器不支持，请使用后端转写';
+  }
+}
+
+function toggleSTTMode() {
+  if (isRecording) {
+    stopRecording();
+  }
+  useBackendSTT = !useBackendSTT;
+  updateSTTLabel();
+  showToast(useBackendSTT
+    ? '🔧 已切换到「后端转写」模式'
+    : '🌐 已切换到「浏览器识别」模式', 'success');
+}
+
+function toggleMic() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  const micBtn = document.getElementById('micBtn');
+
+  if (useBackendSTT) {
+    // 🅱️ MediaRecorder → 后端 Whisper API
+    try {
+      recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : (MediaRecorder.isTypeSupported('audio/mp4')
+            ? 'audio/mp4'
+            : ''));
+      mediaRecorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : {});
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        recordingStream.getTracks().forEach(t => t.stop());
+        recordingStream = null;
+
+        if (chunks.length === 0) {
+          micBtn.classList.remove('recording');
+          isRecording = false;
+          return;
+        }
+
+        micBtn.classList.remove('recording');
+        micBtn.classList.add('processing');
+        micBtn.textContent = '⏳';
+        updateStatus('🎤 转写中...', 'pending');
+
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+
+        try {
+          const res = await fetch(`${API}/api/stt/transcribe`, {
+            method: 'POST',
+            body: formData
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || '转写失败');
+          }
+          const data = await res.json();
+          const input = document.getElementById('messageInput');
+          input.value = (input.value + data.text).trim();
+          isRecording = false;
+          if (input.value && state.isInterviewing && !document.getElementById('sendBtn').disabled) {
+            sendMessage();
+          }
+        } catch (e) {
+          showToast('❌ 语音转写失败: ' + e.message, 'error');
+        } finally {
+          micBtn.classList.remove('processing');
+          micBtn.textContent = '🎤';
+          micBtn.title = '语音输入';
+          updateStatus('面试进行中', 'dot');
+        }
+      };
+
+      isRecording = true;
+      micBtn.textContent = '⏹️';
+      micBtn.classList.add('recording');
+      micBtn.title = '点击停止录音';
+      updateStatus('🎤 录音中... (后端转写)', 'pending');
+      mediaRecorder.start();
+    } catch (e) {
+      showToast('❌ 无法访问麦克风: ' + e.message, 'error');
+    }
+  } else {
+    // 🅰️ Web Speech API 模式
+    if (!recognition) {
+      showToast('❌ 语音识别未初始化', 'error');
+      return;
+    }
+    try {
+      recognition.start();
+    } catch(e) {}
+  }
+}
+
+function stopRecording() {
+  isRecording = false;
+  const micBtn = document.getElementById('micBtn');
+  const input = document.getElementById('messageInput');
+
+  if (useBackendSTT && mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+    return;
+  }
+
+  // Web Speech API 停止
+  micBtn.textContent = '🎤';
+  micBtn.classList.remove('recording');
+  micBtn.classList.remove('processing');
+  micBtn.title = '语音输入';
+  input.placeholder = '输入你的回答...';
+
+  if (recognition) {
+    try {
+      const origOnEnd = recognition.onend;
+      recognition.onend = null;
+      recognition.stop();
+      recognition.onend = origOnEnd;
+    } catch(e) {}
+  }
+
+  if (input.value.trim() && state.isInterviewing && !document.getElementById('sendBtn').disabled) {
+    sendMessage();
+  }
+
+  updateStatus('面试进行中', 'dot');
+}
+
+// ══════════════════════════════════════════════════
+// 启动
+// ══════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupSpeechInput();
+  init();
+});
 </script>
+
 </body>
 </html>
