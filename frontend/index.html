@@ -35,10 +35,22 @@ body{
   font-family:var(--sans);
   font-size:15px;line-height:1.6;
   color:var(--ink);
-  background:var(--paper);
+  background:#ECEAE4;  /* 外圈底色，与边框同色，形成无边感 */
   -webkit-font-smoothing:antialiased;
   display:flex;flex-direction:column;
   min-height:100vh;
+  padding:12px;
+}
+
+/* 整个界面加边框——双层细线，精致感 */
+#app{
+  flex:1;
+  background:var(--paper);
+  border:1px solid var(--line-2);
+  border-radius:20px;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+  display:flex;flex-direction:column;
+  overflow:hidden;
 }
 button{font-family:inherit;color:inherit}
 ::selection{background:var(--red);color:#fff}
@@ -375,23 +387,31 @@ main, .messages, #welcomeScreen{
 .input-area textarea::placeholder{color:var(--ink-4)}
 
 .mic-btn{
-  width:36px;height:36px;flex-shrink:0;
-  background:transparent;border:none;
+  width:48px;height:48px;flex-shrink:0;
+  background:var(--paper);border:1.5px solid var(--line-2);
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;color:var(--ink-3);
+  font-size:22px;color:var(--ink-3);
   cursor:pointer;
-  transition:background .12s,color .12s;
+  transition:background .15s,color .15s,border-color .15s,box-shadow .15s;
+  position:relative;
 }
-.mic-btn:hover{background:var(--paper);color:var(--ink)}
+.mic-btn:hover{background:#fff;border-color:var(--ink-4);color:var(--ink-2);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.mic-btn:active{transform:translateY(1px)}
 .mic-btn.recording{
-  background:var(--red);color:#fff;
-  animation:micPulse 1.4s infinite;
+  background:var(--red);border-color:var(--red);color:#fff;
+  box-shadow:0 0 0 0 rgba(200,16,46,.4);
+  animation:micPulse 1.6s ease-in-out infinite;
 }
-.mic-btn.processing{background:#FEF3C7;color:#92400E;pointer-events:none}
+.mic-btn.recording:hover{background:var(--red-hover);border-color:var(--red-hover);color:#fff}
+.mic-btn:disabled{
+  opacity:0.5;cursor:not-allowed;
+}
+.mic-btn:disabled:hover{background:var(--paper);border-color:var(--line-2);color:var(--ink-4);box-shadow:none;transform:none}
+.mic-btn.processing{background:#FEF3C7;border-color:#FDE68A;color:#92400E;pointer-events:none;animation:none;box-shadow:none}
 @keyframes micPulse{
-  0%,100%{box-shadow:0 0 0 0 var(--red-ring)}
-  50%{box-shadow:0 0 0 10px rgba(200,16,46,0)}
+  0%,100%{box-shadow:0 0 0 0 rgba(200,16,46,.35)}
+  50%{box-shadow:0 0 0 14px rgba(200,16,46,0)}
 }
 
 .send-btn{
@@ -580,12 +600,15 @@ main, .messages, #welcomeScreen{
 </head>
 <body>
 
+<div id="app">
+
 <header>
   <!-- 点击 logo 回到欢迎页（仅当在面试中时有用） -->
   <h1 onclick="if(state.isInterviewing)returnToSetup()">Interview <i>Mate</i></h1>
   <div class="nav">
+    <button id="langToggle" onclick="toggleLanguage()" title="切换语言" style="width:36px;height:36px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink-3);cursor:pointer;transition:background .12s,color .12s;flex-shrink:0">🇨🇳</button>
     <button id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
-    <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none">结束面试</button>
+    <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none" data-i18n="btn.end_interview">结束面试</button>
   </div>
 </header>
 
@@ -600,17 +623,17 @@ main, .messages, #welcomeScreen{
         <div id="welcomeScreen">
 
           <div class="welcome-hero">
-            <span class="eyebrow">Mock Interview</span>
-            <h2>开启一场<br/>认真的<i>模拟面试</i>。</h2>
-            <p>选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。</p>
+            <span class="eyebrow" data-i18n="welcome.eyebrow">Mock Interview</span>
+            <h2 data-i18n="welcome.title" data-i18n-html="true">开启一场<br/>认真的<i>模拟面试</i>。</h2>
+            <p data-i18n="welcome.desc">选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。</p>
           </div>
 
           <!-- 步骤 01 — 选择面试官 -->
           <div class="setup-section">
             <div class="num">01</div>
             <div class="body">
-              <h3>选择面试官</h3>
-              <p class="helper">从内置人格中挑选，或在下方蒸馏出一位真实导师作为面试官。</p>
+              <h3 data-i18n="step.persona.title">选择面试官</h3>
+              <p class="helper" data-i18n="step.persona.helper">从内置人格中挑选，或在下方蒸馏出一位真实导师作为面试官。</p>
               <div class="persona-list" id="personaList"></div>
             </div>
           </div>
@@ -619,12 +642,12 @@ main, .messages, #welcomeScreen{
           <div class="setup-section">
             <div class="num">02</div>
             <div class="body">
-              <h3>蒸馏一位导师 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
-              <p class="helper">输入导师姓名与所属机构，自动提取其学术风格生成专属面试官。</p>
+              <h3 data-i18n="step.extract.title">蒸馏一位导师 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper" data-i18n="step.extract.helper">输入导师姓名与所属机构，利用 AI 分析其论文和公开信息，自动生成专属面试官。</p>
               <div class="extract-form">
-                <input type="text" id="extractName" placeholder="导师姓名（如 Yoshua Bengio）" />
-                <input type="text" id="extractAffil" placeholder="所属机构（如 University of Montreal）" />
-                <button class="btn btn-outline btn-sm" onclick="extractPersona()" id="extractBtn">提取 Persona</button>
+                <input type="text" id="extractName" placeholder="" />
+                <input type="text" id="extractAffil" placeholder="" />
+                <button class="btn btn-outline btn-sm" onclick="extractPersona()" id="extractBtn" data-i18n="step.extract.btn">🎯 提取 Persona</button>
               </div>
             </div>
           </div>
@@ -633,19 +656,19 @@ main, .messages, #welcomeScreen{
           <div class="setup-section">
             <div class="num">03</div>
             <div class="body">
-              <h3>上传个人简历 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
-              <p class="helper">上传你的简历，面试官将会阅读并基于你的经历提问，让面试更贴合你的背景。</p>
+              <h3 data-i18n="step.resume.title">上传个人简历 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper" data-i18n="step.resume.helper">上传你的简历，面试官将会阅读并根据你的背景和经历进行针对性提问。</p>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <label class="btn btn-outline" style="cursor:pointer;display:inline-flex">
+                <label class="btn btn-outline" style="cursor:pointer;display:inline-flex" data-i18n="step.resume.select_btn">
                   📄 选择文件
                   <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleResumeFile(event)" />
                 </label>
-                <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)">尚未上传</span>
+                <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)" data-i18n="step.resume.not_uploaded">尚未上传</span>
               </div>
               <div id="resumeInfo" style="display:none;margin-top:4px">
                 <span style="font-size:12px;color:var(--ink-3)">已上传：</span>
                 <span id="resumeName" style="font-size:12px;font-weight:500;color:var(--ink)"></span>
-                <button class="btn btn-sm btn-outline" style="margin-left:8px;padding:2px 10px" onclick="deleteResume()">删除</button>
+                <button class="btn btn-sm btn-outline" style="margin-left:8px;padding:2px 10px" onclick="deleteResume()" data-i18n="step.resume.delete_btn">删除</button>
               </div>
             </div>
           </div>
@@ -654,45 +677,45 @@ main, .messages, #welcomeScreen{
           <div class="setup-section">
             <div class="num">04</div>
             <div class="body">
-              <h3>面试方向</h3>
-              <p class="helper">这将决定面试官提问的领域与深度。</p>
+              <h3 data-i18n="step.field.title">面试方向</h3>
+              <p class="helper" data-i18n="step.field.helper">这将决定面试官提问的领域与深度。</p>
               <div class="field-input">
-                <label>目标专业方向</label>
+                <label data-i18n="step.field.label">目标专业方向</label>
                 <select id="fieldSelect">
-                  <option value="__professor_field__" style="display:none">该教授自身专业</option>
-                  <option value="计算机科学 / 人工智能">计算机科学 / 人工智能</option>
-                  <option value="数据科学 / 机器学习">数据科学 / 机器学习</option>
-                  <option value="自然语言处理">自然语言处理</option>
-                  <option value="计算机视觉">计算机视觉</option>
-                  <option value="网络安全">网络安全</option>
-                  <option value="软件工程">软件工程</option>
-                  <option value="自动化">自动化</option>
-                  <option value="机器人学">机器人学</option>
-                  <option value="生物信息学">生物信息学</option>
-                  <option value="认知科学">认知科学</option>
-                  <option value="计算神经科学">计算神经科学</option>
-                  <option value="经济学">经济学</option>
-                  <option value="管理学">管理学</option>
-                  <option value="管理科学与工程">管理科学与工程</option>
-                  <option value="统计学">统计学</option>
-                  <option value="物理">物理</option>
-                  <option value="数学">数学</option>
-                  <option value="化学">化学</option>
-                  <option value="生物学">生物学</option>
-                  <option value="医学">医学</option>
-                  <option value="法学">法学</option>
-                  <option value="教育学">教育学</option>
-                  <option value="心理学">心理学</option>
-                  <option value="其他（请自定义）">其他</option>
+                  <option value="__professor_field__" style="display:none" data-i18n="step.field.professor">该教授自身专业</option>
+                  <option value="计算机科学 / 人工智能" data-i18n="field.ai">计算机科学 / 人工智能</option>
+                  <option value="数据科学 / 机器学习" data-i18n="field.ds">数据科学 / 机器学习</option>
+                  <option value="自然语言处理" data-i18n="field.nlp">自然语言处理</option>
+                  <option value="计算机视觉" data-i18n="field.cv">计算机视觉</option>
+                  <option value="网络安全" data-i18n="field.security">网络安全</option>
+                  <option value="软件工程" data-i18n="field.se">软件工程</option>
+                  <option value="自动化" data-i18n="field.auto">自动化</option>
+                  <option value="机器人学" data-i18n="field.robotics">机器人学</option>
+                  <option value="生物信息学" data-i18n="field.bioinfo">生物信息学</option>
+                  <option value="认知科学" data-i18n="field.cogsci">认知科学</option>
+                  <option value="计算神经科学" data-i18n="field.neuro">计算神经科学</option>
+                  <option value="经济学" data-i18n="field.econ">经济学</option>
+                  <option value="管理学" data-i18n="field.mgmt">管理学</option>
+                  <option value="管理科学与工程" data-i18n="field.mse">管理科学与工程</option>
+                  <option value="统计学" data-i18n="field.stat">统计学</option>
+                  <option value="物理" data-i18n="field.physics">物理</option>
+                  <option value="数学" data-i18n="field.math">数学</option>
+                  <option value="化学" data-i18n="field.chem">化学</option>
+                  <option value="生物学" data-i18n="field.bio">生物学</option>
+                  <option value="医学" data-i18n="field.med">医学</option>
+                  <option value="法学" data-i18n="field.law">法学</option>
+                  <option value="教育学" data-i18n="field.edu">教育学</option>
+                  <option value="心理学" data-i18n="field.psych">心理学</option>
+                  <option value="其他（请自定义）" data-i18n="step.field.other">其他</option>
                 </select>
-                <input type="text" id="customField" placeholder="自定义方向" style="display:none;margin-top:8px" />
+                <input type="text" id="customField" placeholder="" style="display:none;margin-top:8px" />
               </div>
             </div>
           </div>
 
           <div class="cta-row">
-            <button class="btn" onclick="startInterview()" id="startBtn">开始面试 →</button>
-            <span style="font-size:12.5px;color:var(--ink-4)">回车键发送回答 · 支持语音输入</span>
+            <button class="btn" onclick="startInterview()" id="startBtn" data-i18n="btn.start">开始面试 →</button>
+            <span style="font-size:12.5px;color:var(--ink-4)" data-i18n="btn.shortcut">回车键发送回答 · 支持语音输入</span>
           </div>
 
         </div>
@@ -710,16 +733,38 @@ main, .messages, #welcomeScreen{
       <!-- 底部输入区 -->
       <div class="input-area" id="inputArea" style="display:none">
         <div class="input-wrapper">
-          <textarea id="messageInput" rows="1" placeholder="输入你的回答..." disabled></textarea>
+          <textarea id="messageInput" rows="1" placeholder="" disabled></textarea>
           <span class="stt-mode" id="sttModeLabel" onclick="toggleSTTMode()" title="切换语音识别模式">浏览器识别</span>
-          <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入" disabled>●</button>
-          <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">发送</button>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入" disabled>🎤</button>
+            <span id="sttLabel" style="font-size:10px;color:var(--ink-4);white-space:nowrap;display:none"></span>
+          </div>
+          <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()" data-i18n="btn.send">发送</button>
         </div>
       </div>
 
     </div>
   </div>
 
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #0：语言选择（Language Selector）      -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="langModal">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <h2 style="font-size:28px;margin-bottom:12px">👋 Welcome!</h2>
+    <p style="font-size:15px;color:var(--ink-3);margin-bottom:28px" id="langPrompt">请选择语言 / Select your language</p>
+    <div style="display:flex;gap:12px;">
+      <button class="btn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer" onclick="setLanguage('zh')">
+        🇨🇳 中文
+      </button>
+      <button class="btn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer" onclick="setLanguage('en')">
+        🇺🇸 English
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
@@ -727,25 +772,25 @@ main, .messages, #welcomeScreen{
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="onboardingModal">
   <div class="modal">
-    <h2>欢迎使用 Interview Mate</h2>
-    <p style="margin-bottom:24px">
+    <h2 data-i18n="onboard.title">欢迎使用 Interview Mate</h2>
+    <p style="margin-bottom:24px" data-i18n="onboard.desc" data-i18n-html="true">
       是否有相关的项目背景文件？例如「金融硕士项目」「管科博士项目」等。
-      <br/>上传后，面试官将根据您的项目背景进行针对性提问。
+      <br/>上传后，面试官将根据你的项目背景进行针对性提问。
     </p>
     <div class="form-group">
-      <label>上传项目背景文件（PDF / TXT）</label>
+      <label data-i18n="onboard.upload_label">上传项目背景文件（PDF / TXT）</label>
       <input type="file" id="onboardingFileInput" accept=".pdf,.txt,.md" onchange="handleOnboardingFile(event)" />
       <div id="onboardingFileInfo" style="display:none;margin-top:10px">
         <div class="file-info">
           <span id="onboardingFileName"></span>
-          <button class="remove-file" onclick="clearOnboardingFile()">移除</button>
+          <button class="remove-file" onclick="clearOnboardingFile()" data-i18n="step.resume.delete_btn">移除</button>
         </div>
       </div>
-      <div class="skip-hint">💡 也可以跳过，稍后在 ⚙️ 设置中上传</div>
+      <div class="skip-hint" data-i18n="onboard.skip_hint">💡 也可以跳过，稍后在 ⚙️ 设置中上传</div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-outline" onclick="skipOnboarding()">暂时跳过</button>
-      <button class="btn btn-primary" onclick="confirmOnboarding()" id="onboardingConfirmBtn">确认并开始使用</button>
+      <button class="btn btn-outline" onclick="skipOnboarding()" data-i18n="onboard.skip">暂时跳过</button>
+      <button class="btn btn-primary" onclick="confirmOnboarding()" id="onboardingConfirmBtn" data-i18n="onboard.confirm">确认并开始使用</button>
     </div>
   </div>
 </div>
@@ -755,44 +800,44 @@ main, .messages, #welcomeScreen{
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
-    <h2>⚙️ 设置</h2>
+    <h2 data-i18n="settings.title">⚙️ 设置</h2>
 
     <!-- 项目背景文件 -->
     <div class="form-group">
-      <label>项目背景文件</label>
+      <label data-i18n="settings.bg_file">项目背景文件</label>
       <div id="settingsBgInfo">
-        <div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传背景文件</div>
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.bg_none">未上传背景文件</div>
       </div>
       <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
         <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" onchange="handleSettingsFile(event)" />
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsFileInput').click()">上传文件</button>
-        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteBackgroundFile()" id="settingsDeleteBg" style="display:none">删除文件</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsFileInput').click()" data-i18n="settings.bg_upload">上传文件</button>
+        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteBackgroundFile()" id="settingsDeleteBg" style="display:none" data-i18n="settings.bg_delete">删除文件</button>
       </div>
     </div>
 
     <!-- 个人简历 -->
     <div class="form-group">
-      <label>个人简历</label>
+      <label data-i18n="settings.resume">个人简历</label>
       <div id="settingsResumeInfo">
-        <div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传简历</div>
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.resume_none">未上传简历</div>
       </div>
       <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
         <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleSettingsResume(event)" />
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsResumeInput').click()">上传简历</button>
-        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteSettingsResume()" id="settingsDeleteResume" style="display:none">删除简历</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsResumeInput').click()" data-i18n="settings.resume_upload">上传简历</button>
+        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteSettingsResume()" id="settingsDeleteResume" style="display:none" data-i18n="settings.resume_delete">删除简历</button>
       </div>
     </div>
 
     <!-- 当前面试官 -->
     <div class="form-group">
-      <label>当前面试官</label>
+      <label data-i18n="settings.persona">当前面试官</label>
       <div id="settingsPersonaInfo" style="font-size:13px;color:var(--ink-3);padding:6px 0">
-        未选择面试官
+        <span data-i18n="settings.persona_none">未选择面试官</span>
       </div>
     </div>
 
     <div class="form-actions">
-      <button class="btn btn" onclick="closeSettings()">关闭</button>
+      <button class="btn btn" onclick="closeSettings()" data-i18n="settings.close">关闭</button>
     </div>
   </div>
 </div>
@@ -802,11 +847,11 @@ main, .messages, #welcomeScreen{
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="feedbackModal">
   <div class="modal">
-    <h2>面试评估报告</h2>
-    <div class="feedback-content" id="feedbackContent">加载中...</div>
+    <h2 data-i18n="feedback.title">面试评估报告</h2>
+    <div class="feedback-content" id="feedbackContent" data-i18n="feedback.loading">加载中...</div>
     <div style="display:flex;gap:10px;margin-top:28px">
-      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="downloadSummary()" id="downloadSummaryBtn">📥 下载面试总结</button>
-      <button class="btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" onclick="closeFeedback()">关闭并回到首页</button>
+      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="downloadSummary()" id="downloadSummaryBtn" data-i18n="feedback.download">📥 下载面试总结</button>
+      <button class="btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" onclick="closeFeedback()" data-i18n="feedback.close">关闭并回到首页</button>
     </div>
   </div>
 </div>
@@ -816,11 +861,11 @@ main, .messages, #welcomeScreen{
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="personaDetailModal">
   <div class="modal">
-    <h2>导师画像</h2>
+    <h2 data-i18n="detail.title">导师画像</h2>
     <div id="personaDetailContent">
-      <div style="text-align:center;padding:40px;color:var(--ink-3)">加载中...</div>
+      <div style="text-align:center;padding:40px;color:var(--ink-3)" data-i18n="detail.loading">加载中...</div>
     </div>
-    <button class="btn close-btn" onclick="closePersonaDetail()">关闭</button>
+    <button class="btn close-btn" onclick="closePersonaDetail()" data-i18n="detail.close">关闭</button>
   </div>
 </div>
 
@@ -830,8 +875,8 @@ main, .messages, #welcomeScreen{
 <div class="modal-overlay" id="loadingModal">
   <div class="modal" style="max-width:400px;text-align:center">
     <div style="font-size:48px;margin-bottom:16px">⏳</div>
-    <h2 style="margin-bottom:8px">报告生成中...</h2>
-    <p style="font-size:14px;color:var(--ink-3)">正在分析您的面试表现，请稍候</p>
+    <h2 style="margin-bottom:8px" data-i18n="loading.title">报告生成中...</h2>
+    <p style="font-size:14px;color:var(--ink-3)" data-i18n="loading.desc">正在分析你的面试表现，请稍候</p>
     <div class="spinner" style="margin:24px auto 0;width:24px;height:24px;border-width:3px"></div>
   </div>
 </div>
@@ -841,9 +886,11 @@ main, .messages, #welcomeScreen{
 // 状态管理
 // ══════════════════════════════════════════════════
 
-const API = window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1'
+// API 地址：本地开发时连 8000 端口，生产环境下后端也托管前端（同域）
+const API = (window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1')
+  && !window.location.port.includes('8000')
   ? 'http://localhost:8000'
-  : ''; // 同域部署
+  : ''; // 同域部署（生产环境）
 
 const state = {
   personaId: null,
@@ -858,6 +905,454 @@ const state = {
   backgroundFileName: null,
   backgroundFile: null // 用于暂存未上传的文件（onboarding流程）
 };
+
+// ══════════════════════════════════════════════════
+// 🌐 国际化（i18n）
+// ══════════════════════════════════════════════════
+
+const _lang = {
+  zh: {
+    'lang.select.prompt': '请选择语言',
+    'welcome.eyebrow': 'Mock Interview',
+    'welcome.title': '开启一场<br/>认真的<i>模拟面试</i>。',
+    'welcome.desc': '选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。',
+    'step.persona.title': '选择面试官',
+    'step.persona.helper': '从内置人格中挑选，或在下方蒸馏出一位真实导师作为面试官。',
+    'step.extract.title': '蒸馏一位导师',
+    'step.extract.helper': '输入导师姓名与所属机构，利用 AI 分析其论文和公开信息，自动生成专属面试官。',
+    'step.extract.name_placeholder': '导师姓名（如 Yoshua Bengio）',
+    'step.extract.affil_placeholder': '所属机构（如 University of Montreal）',
+    'step.extract.btn': '🎯 提取 Persona',
+    'step.resume.title': '上传个人简历',
+    'step.resume.helper': '上传你的简历，面试官将会阅读并根据你的背景和经历进行针对性提问。',
+    'step.resume.select_btn': '📄 选择文件',
+    'step.resume.not_uploaded': '尚未上传',
+    'step.resume.delete_btn': '删除',
+    'step.field.title': '面试方向',
+    'step.field.helper': '这将决定面试官提问的领域与深度。',
+    'step.field.label': '目标专业方向',
+    'step.field.professor': '🎓 该教授自身专业',
+    'step.field.other': '其他（请自定义）',
+    'step.field.custom_placeholder': '在此输入自定义方向',
+    'field.ai': '计算机科学 / 人工智能',
+    'field.ds': '数据科学 / 机器学习',
+    'field.nlp': '自然语言处理',
+    'field.cv': '计算机视觉',
+    'field.security': '网络安全',
+    'field.se': '软件工程',
+    'field.auto': '自动化',
+    'field.robotics': '机器人学',
+    'field.bioinfo': '生物信息学',
+    'field.cogsci': '认知科学',
+    'field.neuro': '计算神经科学',
+    'field.econ': '经济学',
+    'field.mgmt': '管理学',
+    'field.mse': '管理科学与工程',
+    'field.stat': '统计学',
+    'field.physics': '物理',
+    'field.math': '数学',
+    'field.chem': '化学',
+    'field.bio': '生物学',
+    'field.med': '医学',
+    'field.law': '法学',
+    'field.edu': '教育学',
+    'field.psych': '心理学',
+    'btn.start': '开始面试 →',
+    'btn.shortcut': '回车键发送回答 · 支持语音输入',
+    'btn.new_interview': '🔄 新面试',
+    'btn.wait_connect': '⏳ 连接中...',
+    'btn.end_interview': '结束面试',
+    'status.ready': '就绪',
+    'status.interviewing': '面试进行中',
+    'status.thinking': '面试官思考中...',
+    'status.generating': '生成反馈报告中...',
+    'status.recording': '🎤 录音中...',
+    'status.transcribing': '🎤 转写中...',
+    'status.backend_recording': '🎤 录音中... (后端转写)',
+    'input.placeholder': '输入你的回答...',
+    'stt.browser': '🌐 浏览器识别',
+    'stt.backend': '🔧 后端转写',
+    'btn.send': '发送',
+    'msg.interviewer': '面试官',
+    'msg.you': '你',
+    'msg.interviewer_with': '面试官 · ',
+    'msg.error_prefix': '⚠️ 回复获取失败: ',
+    'msg.error_retry': '。请稍后重试。',
+    'persona.general': '🎭 通用面试官',
+    'persona.extracted': '🎓 已蒸馏的导师',
+    'persona.general_tag': '通用',
+    'extract.loading': '⏳ 提取中...',
+    'extract.success': '🎉 成功提取 "${name}" 的学术画像！',
+    'extract.alert': '🎉 已成功提取 "${name}" 的面试官画像！\n已添加到面试官列表，请重新选择。',
+    'extract.no_name': '请输入导师姓名',
+    'extract.fail': '❌ 提取失败: ',
+    'settings.title': '⚙️ 设置',
+    'settings.bg_file': '项目背景文件',
+    'settings.bg_none': '未上传背景文件',
+    'settings.bg_upload': '上传文件',
+    'settings.bg_delete': '删除文件',
+    'settings.bg_success': '✅ 已上传: ',
+    'settings.bg_deleted': '🗑️ 背景文件已删除',
+    'settings.bg_confirm_delete': '确定删除背景文件吗？',
+    'settings.resume': '个人简历',
+    'settings.resume_none': '未上传简历',
+    'settings.resume_upload': '上传简历',
+    'settings.resume_delete': '删除简历',
+    'settings.resume_success': '✅ 简历上传成功',
+    'settings.resume_deleted': '🗑️ 简历已删除',
+    'settings.resume_confirm_delete': '确定删除简历吗？',
+    'settings.persona': '当前面试官',
+    'settings.persona_none': '未选择面试官',
+    'settings.close': '关闭',
+    'settings.query_fail': '查询失败',
+    'onboard.title': '欢迎使用 Interview Mate',
+    'onboard.desc': '是否有相关的项目背景文件？例如「金融硕士项目」「管科博士项目」等。<br/>上传后，面试官将根据你的项目背景进行针对性提问。',
+    'onboard.upload_label': '上传项目背景文件（PDF / TXT）',
+    'onboard.skip_hint': '💡 也可以跳过，稍后在 ⚙️ 设置中上传',
+    'onboard.skip': '暂时跳过',
+    'onboard.confirm': '确认并开始使用',
+    'onboard.skipped': '👋 可以在设置中随时上传背景文件',
+    'onboard.uploaded': '✅ 已上传: ',
+    'feedback.title': '面试评估报告',
+    'feedback.loading': '加载中...',
+    'feedback.download': '📥 下载面试总结',
+    'feedback.close': '关闭并回到首页',
+    'feedback.no_data': '❌ 没有可下载的面试总结',
+    'loading.title': '报告生成中...',
+    'loading.desc': '正在分析你的面试表现，请稍候',
+    'detail.title': '导师画像',
+    'detail.loading': '⏳ 加载中...',
+    'detail.professor': '教授',
+    'detail.research_areas': '研究方向',
+    'detail.research_style': '研究风格',
+    'detail.teaching_style': '指导风格',
+    'detail.traits': '性格特征',
+    'detail.questions': '典型问题',
+    'detail.llm_prompt': '🤖 查看 LLM 风格指令',
+    'detail.load_fail': '❌ 加载失败: ',
+    'detail.close': '关闭',
+    'detail.analyzing': '分析中...',
+    'detail.at': '@',
+    'confirm.delete_persona': '确定要删除导师 "${name}" 的面试官画像吗？（删除后不可恢复）',
+    'confirm.delete_persona_done': '🗑️ 已删除 "${name}"',
+    'confirm.exit_interview': '确定退出当前面试吗？对话记录将被保留至结束面试。',
+    'confirm.end_interview': '确定结束本次面试并生成反馈报告吗？',
+    'toast.upload_fail': '❌ 上传失败: ',
+    'toast.delete_fail': '❌ 删除失败: ',
+    'toast.stt_switch_backend': '🔧 已切换到「后端转写」模式',
+    'toast.stt_switch_browser': '🌐 已切换到「浏览器识别」模式',
+    'toast.stt_fail': '❌ 语音转写失败: ',
+    'toast.stt_mic_blocked': '🎤 麦克风权限被拒绝，请在浏览器设置中允许',
+    'toast.stt_service_unavail': '🌐 浏览器语音服务不可用，已自动切换为「后端转写」模式',
+    'toast.stt_error': '🎤 识别出错，已切换为「后端转写」模式: ',
+    'toast.mic_unavail': '❌ 无法访问麦克风: ',
+    'toast.stt_uninit': '❌ 语音识别未初始化',
+    'toast.downloaded': '📥 面试总结已下载',
+    'toast.resume_success': '✅ 简历上传成功',
+    'toast.resume_delete_fail': '❌ 删除失败',
+    'download.header': '=== Interview Mate — 面试评估报告 ===',
+    'download.date': '日期: ',
+    'download.interviewer': '面试官: ',
+    'download.field': '方向: ',
+    'download.unknown': '未知',
+    'error.select_persona': '请先选择一个面试官人格',
+    'error.select_field': '请输入/选择目标专业方向',
+    'error.start_fail': '启动面试失败: ',
+    'error.generating': '生成反馈失败: ',
+    'lang.switched': '🌐 已切换为中文',
+  },
+  en: {
+    'lang.select.prompt': 'Select your language',
+    'welcome.eyebrow': 'Mock Interview',
+    'welcome.title': 'Start a<br/>serious <i>mock interview</i>.',
+    'welcome.desc': 'Pick an interviewer, choose your field, and start a highly realistic conversation. Each round is recorded, and you\'ll receive an evaluation report at the end.',
+    'step.persona.title': 'Choose Interviewer',
+    'step.persona.helper': 'Pick from built-in personas, or distill a real professor below to create a custom interviewer.',
+    'step.extract.title': 'Distill a Professor',
+    'step.extract.helper': 'Enter a professor\'s name and institution. We\'ll search their papers and public info to generate a personalized interviewer.',
+    'step.extract.name_placeholder': 'Professor name (e.g. Yoshua Bengio)',
+    'step.extract.affil_placeholder': 'Institution (e.g. University of Montreal)',
+    'step.extract.btn': '🎯 Extract Persona',
+    'step.resume.title': 'Upload Resume',
+    'step.resume.helper': 'Upload your resume so the interviewer can ask questions tailored to your background and experience.',
+    'step.resume.select_btn': '📄 Choose File',
+    'step.resume.not_uploaded': 'Not uploaded yet',
+    'step.resume.delete_btn': 'Delete',
+    'step.field.title': 'Interview Field',
+    'step.field.helper': 'This determines the scope and depth of the questions.',
+    'step.field.label': 'Target Field',
+    'step.field.professor': '🎓 Professor\'s own field',
+    'step.field.other': 'Other (custom)',
+    'step.field.custom_placeholder': 'Enter a custom field',
+    'field.ai': 'Computer Science / AI',
+    'field.ds': 'Data Science / Machine Learning',
+    'field.nlp': 'Natural Language Processing',
+    'field.cv': 'Computer Vision',
+    'field.security': 'Cybersecurity',
+    'field.se': 'Software Engineering',
+    'field.auto': 'Automation',
+    'field.robotics': 'Robotics',
+    'field.bioinfo': 'Bioinformatics',
+    'field.cogsci': 'Cognitive Science',
+    'field.neuro': 'Computational Neuroscience',
+    'field.econ': 'Economics',
+    'field.mgmt': 'Management',
+    'field.mse': 'Management Science & Engineering',
+    'field.stat': 'Statistics',
+    'field.physics': 'Physics',
+    'field.math': 'Mathematics',
+    'field.chem': 'Chemistry',
+    'field.bio': 'Biology',
+    'field.med': 'Medicine',
+    'field.law': 'Law',
+    'field.edu': 'Education',
+    'field.psych': 'Psychology',
+    'btn.start': 'Start Interview →',
+    'btn.shortcut': 'Enter to send · Voice input supported',
+    'btn.new_interview': '🔄 New Interview',
+    'btn.wait_connect': '⏳ Connecting...',
+    'btn.end_interview': 'End Interview',
+    'status.ready': 'Ready',
+    'status.interviewing': 'Interview in progress',
+    'status.thinking': 'Interviewer is thinking...',
+    'status.generating': 'Generating report...',
+    'status.recording': '🎤 Recording...',
+    'status.transcribing': '🎤 Transcribing...',
+    'status.backend_recording': '🎤 Recording... (backend STT)',
+    'input.placeholder': 'Type your answer...',
+    'stt.browser': '🌐 Browser STT',
+    'stt.backend': '🔧 Backend STT',
+    'btn.send': 'Send',
+    'msg.interviewer': 'Interviewer',
+    'msg.you': 'You',
+    'msg.interviewer_with': 'Interviewer · ',
+    'msg.error_prefix': '⚠️ Failed to get response: ',
+    'msg.error_retry': '. Please try again.',
+    'persona.general': '🎭 General Personas',
+    'persona.extracted': '🎓 Extracted Professors',
+    'persona.general_tag': 'General',
+    'extract.loading': '⏳ Extracting...',
+    'extract.success': '🎉 Successfully extracted "${name}"\'s profile!',
+    'extract.alert': '🎉 Extracted "${name}"!\nAdded to the list. Please select them as your interviewer.',
+    'extract.no_name': 'Please enter a professor name',
+    'extract.fail': '❌ Extraction failed: ',
+    'settings.title': '⚙️ Settings',
+    'settings.bg_file': 'Background Document',
+    'settings.bg_none': 'No background document uploaded',
+    'settings.bg_upload': 'Upload File',
+    'settings.bg_delete': 'Delete File',
+    'settings.bg_success': '✅ Uploaded: ',
+    'settings.bg_deleted': '🗑️ Background file deleted',
+    'settings.bg_confirm_delete': 'Delete background file?',
+    'settings.resume': 'Resume',
+    'settings.resume_none': 'No resume uploaded',
+    'settings.resume_upload': 'Upload Resume',
+    'settings.resume_delete': 'Delete Resume',
+    'settings.resume_success': '✅ Resume uploaded',
+    'settings.resume_deleted': '🗑️ Resume deleted',
+    'settings.resume_confirm_delete': 'Delete resume?',
+    'settings.persona': 'Current Interviewer',
+    'settings.persona_none': 'No interviewer selected',
+    'settings.close': 'Close',
+    'settings.query_fail': 'Query failed',
+    'onboard.title': 'Welcome to Interview Mate',
+    'onboard.desc': 'Do you have a background document about your target program?<br/>Upload it so the interviewer can ask more relevant questions.',
+    'onboard.upload_label': 'Upload background file (PDF / TXT)',
+    'onboard.skip_hint': '💡 You can skip this and upload later in ⚙️ Settings',
+    'onboard.skip': 'Skip for now',
+    'onboard.confirm': 'Confirm & Start',
+    'onboard.skipped': '👋 You can upload a background file in Settings anytime',
+    'onboard.uploaded': '✅ Uploaded: ',
+    'feedback.title': 'Interview Evaluation Report',
+    'feedback.loading': 'Loading...',
+    'feedback.download': '📥 Download Summary',
+    'feedback.close': 'Close & Return Home',
+    'feedback.no_data': '❌ No interview summary available',
+    'loading.title': 'Generating Report...',
+    'loading.desc': 'Analyzing your performance, please wait',
+    'detail.title': 'Professor Profile',
+    'detail.loading': '⏳ Loading...',
+    'detail.professor': 'Professor',
+    'detail.research_areas': 'Research Areas',
+    'detail.research_style': 'Research Style',
+    'detail.teaching_style': 'Mentoring Style',
+    'detail.traits': 'Personality Traits',
+    'detail.questions': 'Typical Questions',
+    'detail.llm_prompt': '🤖 View LLM Style Prompt',
+    'detail.load_fail': '❌ Load failed: ',
+    'detail.close': 'Close',
+    'detail.analyzing': 'Analyzing...',
+    'detail.at': '@',
+    'confirm.delete_persona': 'Delete professor "${name}"\'s interviewer profile? (Cannot be undone)',
+    'confirm.delete_persona_done': '🗑️ Deleted "${name}"',
+    'confirm.exit_interview': 'Exit current interview? Conversation history will be kept until you end the interview.',
+    'confirm.end_interview': 'End this interview and generate a feedback report?',
+    'toast.upload_fail': '❌ Upload failed: ',
+    'toast.delete_fail': '❌ Delete failed: ',
+    'toast.stt_switch_backend': '🔧 Switched to Backend STT mode',
+    'toast.stt_switch_browser': '🌐 Switched to Browser STT mode',
+    'toast.stt_fail': '❌ Speech recognition failed: ',
+    'toast.stt_mic_blocked': '🎤 Microphone permission denied. Please allow in browser settings',
+    'toast.stt_service_unavail': '🌐 Browser speech unavailable. Switched to Backend STT',
+    'toast.stt_error': '🎤 Recognition error. Switched to Backend STT: ',
+    'toast.mic_unavail': '❌ Cannot access microphone: ',
+    'toast.stt_uninit': '❌ Speech recognition not initialized',
+    'toast.downloaded': '📥 Interview summary downloaded',
+    'toast.resume_success': '✅ Resume uploaded',
+    'toast.resume_delete_fail': '❌ Delete failed',
+    'download.header': '=== Interview Mate — Evaluation Report ===',
+    'download.date': 'Date: ',
+    'download.interviewer': 'Interviewer: ',
+    'download.field': 'Field: ',
+    'download.unknown': 'Unknown',
+    'error.select_persona': 'Please select an interviewer persona first',
+    'error.select_field': 'Please enter/select a target field',
+    'error.start_fail': 'Failed to start interview: ',
+    'error.generating': 'Failed to generate feedback: ',
+    'lang.switched': '🌐 Switched to English',
+  }
+};
+
+function getLanguage() {
+  try {
+    const stored = localStorage.getItem('interviewmate_lang');
+    if (stored === 'en' || stored === 'zh') return stored;
+  } catch(e) {}
+  return 'zh';
+}
+
+function setLanguage(lang) {
+  try {
+    localStorage.setItem('interviewmate_lang', lang);
+    setStorage('langChosen', true);
+  } catch(e) {}
+  const toggle = document.getElementById('langToggle');
+  if (toggle) toggle.textContent = lang === 'zh' ? '🇨🇳' : '🇺🇸';
+  document.getElementById('langModal')?.classList.remove('show');
+  applyLanguage();
+  const hasOnboarded = getStorage('hasOnboarded', false);
+  if (!hasOnboarded) {
+    setTimeout(() => openOnboarding(), 400);
+  }
+}
+
+function toggleLanguage() {
+  const current = getLanguage();
+  const next = current === 'zh' ? 'en' : 'zh';
+  setLanguage(next);
+  showToast(t(next === 'zh' ? 'lang.switched' : 'lang.switched'), 'success');
+}
+
+function applyLanguage() {
+  const lang = getLanguage();
+  // Update HTML lang attribute
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  // Update lang toggle button
+  const toggle = document.getElementById('langToggle');
+  if (toggle) {
+    toggle.textContent = lang === 'zh' ? '🇨🇳' : '🇺🇸';
+    toggle.title = lang === 'zh' ? '切换语言' : 'Switch Language';
+  }
+  const settingsBtn = document.getElementById('settingsBtn');
+  if (settingsBtn) settingsBtn.title = lang === 'zh' ? '设置' : 'Settings';
+
+  // Update all elements with data-i18n attribute
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (!key) return;
+    const raw = _lang[lang]?.[key] ?? _lang['zh']?.[key] ?? '';
+    if (el.hasAttribute('data-i18n-html')) {
+      el.innerHTML = raw;
+    } else {
+      el.textContent = raw;
+    }
+  });
+
+  // Update field select options
+  const fieldSelect = document.getElementById('fieldSelect');
+  if (fieldSelect) {
+    const optionLabels = [
+      ['__professor_field__', t('step.field.professor')],
+      ['计算机科学 / 人工智能', t('field.ai')],
+      ['数据科学 / 机器学习', t('field.ds')],
+      ['自然语言处理', t('field.nlp')],
+      ['计算机视觉', t('field.cv')],
+      ['网络安全', t('field.security')],
+      ['软件工程', t('field.se')],
+      ['自动化', t('field.auto')],
+      ['机器人学', t('field.robotics')],
+      ['生物信息学', t('field.bioinfo')],
+      ['认知科学', t('field.cogsci')],
+      ['计算神经科学', t('field.neuro')],
+      ['经济学', t('field.econ')],
+      ['管理学', t('field.mgmt')],
+      ['管理科学与工程', t('field.mse')],
+      ['统计学', t('field.stat')],
+      ['物理', t('field.physics')],
+      ['数学', t('field.math')],
+      ['化学', t('field.chem')],
+      ['生物学', t('field.bio')],
+      ['医学', t('field.med')],
+      ['法学', t('field.law')],
+      ['教育学', t('field.edu')],
+      ['心理学', t('field.psych')],
+      ['其他（请自定义）', t('step.field.other')],
+    ];
+    for (const [val, label] of optionLabels) {
+      const opt = fieldSelect.querySelector(`option[value="${val}"]`);
+      if (opt) opt.textContent = label;
+    }
+  }
+
+  // Update resume status label
+  const resumeStatus = document.getElementById('resumeStatus');
+  if (resumeStatus && !resumeStatus.textContent.includes('✅') && !resumeStatus.textContent.includes('⏳') && !resumeStatus.textContent.includes('❌')) {
+    resumeStatus.textContent = t('step.resume.not_uploaded');
+  }
+
+  // Update extract form placeholders
+  const extractName = document.getElementById('extractName');
+  if (extractName) extractName.placeholder = t('step.extract.name_placeholder');
+  const extractAffil = document.getElementById('extractAffil');
+  if (extractAffil) extractAffil.placeholder = t('step.extract.affil_placeholder');
+
+  // Update custom field placeholder
+  const customField = document.getElementById('customField');
+  if (customField) customField.placeholder = t('step.field.custom_placeholder');
+
+  // Update message input placeholder
+  const msgInput = document.getElementById('messageInput');
+  if (msgInput) msgInput.placeholder = t('input.placeholder');
+
+  // Update stt label
+  updateSTTLabel();
+
+  // Update settings UI if modal is open/loaded
+  const settingsBgInfo = document.getElementById('settingsBgInfo');
+  if (settingsBgInfo && !settingsBgInfo.querySelector('.file-info')) {
+    settingsBgInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.bg_none') + '</div>';
+  }
+
+  // Update status text
+  const statusText = document.getElementById('statusText');
+  const dot = document.getElementById('statusDot');
+  if (statusText && (!state.isInterviewing && dot && dot.className === 'dot')) {
+    statusText.textContent = t('status.ready');
+  }
+
+  // Re-render personas to update section dividers and tags
+  loadPersonas();
+}
+
+function t(key, vars = {}) {
+  const lang = getLanguage();
+  let text = _lang[lang]?.[key];
+  if (text === undefined) text = _lang['zh']?.[key] ?? key;
+  for (const [k, v] of Object.entries(vars)) {
+    text = text.replace('${' + k + '}', v);
+  }
+  return text;
+}
 
 // ══════════════════════════════════════════════════
 // localStorage 工具函数
@@ -891,6 +1386,9 @@ function removeStorage(key) {
 // ══════════════════════════════════════════════════
 
 async function init() {
+  // 先应用语言（设置 data-i18n 初始值）
+  applyLanguage();
+
   await loadPersonas();
   setupEventListeners();
   setupSpeechInput();
@@ -899,6 +1397,15 @@ async function init() {
   // 读取 localStorage 状态
   const hasOnboarded = getStorage('hasOnboarded', false);
   const lastPersonaId = getStorage('lastPersonaId', null);
+
+  // 显示语言选择弹窗，选完后继续
+  const langChosen = getStorage('langChosen', false);
+  if (!langChosen) {
+    setTimeout(() => {
+      document.getElementById('langModal').classList.add('show');
+    }, 300);
+    return;
+  }
 
   // 如果尚未完成引导，显示引导弹窗
   if (!hasOnboarded) {
@@ -959,7 +1466,7 @@ async function init() {
 
 async function loadPersonas() {
   try {
-    const res = await fetch(`${API}/api/personas`);
+    const res = await fetch(`${API}/api/personas?language=${getLanguage()}`);
     const data = await res.json();
     renderPersonas(data.personas);
   } catch(e) {
@@ -990,7 +1497,7 @@ function renderPersonas(personas) {
   if (general.length) {
     const divider = document.createElement('div');
     divider.className = 'section-divider';
-    divider.textContent = '🎭 通用面试官';
+    divider.textContent = t('persona.general');
     container.appendChild(divider);
     general.forEach(p => container.appendChild(createPersonaCard(p, false)));
   }
@@ -999,7 +1506,7 @@ function renderPersonas(personas) {
   if (extracted.length) {
     const divider = document.createElement('div');
     divider.className = 'section-divider';
-    divider.textContent = '🎓 已蒸馏的导师';
+    divider.textContent = t('persona.extracted');
     container.appendChild(divider);
     extracted.forEach(p => container.appendChild(createPersonaCard(p, true)));
   }
@@ -1022,7 +1529,7 @@ function createPersonaCard(p, isExtracted) {
       <div class="desc">${p.description || ''}</div>
       ${isExtracted
         ? `<div class="tag">🎓 ${(p.research_areas||[]).join(' · ')}</div>`
-        : `<span class="tag">通用</span>`
+        : `<span class="tag">${t('persona.general_tag')}</span>`
       }
     </div>
     ${isExtracted ? `
@@ -1092,28 +1599,28 @@ function setupEventListeners() {
 async function extractPersona() {
   const name = document.getElementById('extractName').value.trim();
   const affiliation = document.getElementById('extractAffil').value.trim();
-  if (!name) { showToast('请输入导师姓名', 'error'); return; }
+  if (!name) { showToast(t('extract.no_name'), 'error'); return; }
 
   const btn = document.getElementById('extractBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ 提取中...';
+  btn.textContent = t('extract.loading');
 
   try {
     const res = await fetch(`${API}/api/personas/extract`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, affiliation })
+      body: JSON.stringify({ name, affiliation, language: getLanguage() })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || '提取失败');
+    if (!res.ok) throw new Error(data.detail || t('extract.fail'));
     const p = data.persona;
     state.extractedPersonas[p.id] = p;
 
-    showToast(`🎉 成功提取 "${p.name}" 的学术画像！`, 'success');
+    showToast(t('extract.success', { name: p.name }), 'success');
     await loadPersonas();
     state.extractedPersonas[p.id] = p;
 
-    alert(`🎉 已成功提取 "${p.name}" 的面试官画像！\n已添加到面试官列表，请重新选择。`);
+    alert(t('extract.alert', { name: p.name }));
     await loadPersonas();
 
     // 选中刚提取的
@@ -1124,10 +1631,10 @@ async function extractPersona() {
       });
     }, 100);
   } catch(e) {
-    showToast('❌ 提取失败: ' + e.message, 'error');
+    showToast(t('extract.fail') + e.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = '🎯 提取 Persona';
+    btn.textContent = t('step.extract.btn');
   }
 }
 
@@ -1138,13 +1645,13 @@ async function extractPersona() {
 async function viewPersonaDetail(id) {
   const modal = document.getElementById('personaDetailModal');
   const content = document.getElementById('personaDetailContent');
-  content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">⏳ 加载中...</div>';
+  content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-3)">⏳ ' + t('detail.loading') + '</div>';
   modal.classList.add('show');
 
   try {
     let p = state.extractedPersonas[id];
     if (!p) {
-      const res = await fetch(`${API}/api/personas/${id}`);
+      const res = await fetch(`${API}/api/personas/${id}?language=${getLanguage()}`);
       const data = await res.json();
       p = data.persona;
     }
@@ -1154,33 +1661,33 @@ async function viewPersonaDetail(id) {
         <div style="font-size:48px">🎓</div>
         <div>
           <div style="font-size:20px;font-weight:700">${p.name}</div>
-          <div style="color:var(--ink-3);font-size:14px">${p.title || '教授'} @ ${p.affiliation}</div>
+          <div style="color:var(--ink-3);font-size:14px">${p.title || t('detail.professor')} ${t('detail.at')} ${p.affiliation}</div>
         </div>
       </div>
 
       <table style="width:100%;border-collapse:collapse">
         <tr>
-          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top;color:var(--ink-3)">研究方向</td>
+          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top;color:var(--ink-3)">${t('detail.research_areas')}</td>
           <td style="padding:10px 12px">${(p.research_areas || []).map(r => `<span style="display:inline-block;background:var(--paper);border:1px solid var(--line);padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:var(--ink-2)">${r}</span>`).join('')}</td>
         </tr>
         <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">研究风格</td>
-          <td style="padding:10px 12px;color:var(--ink-2)">${p.research_style || '分析中...'}</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.research_style')}</td>
+          <td style="padding:10px 12px;color:var(--ink-2)">${p.research_style || t('detail.analyzing')}</td>
         </tr>
         <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">指导风格</td>
-          <td style="padding:10px 12px;color:var(--ink-2)">${p.teaching_style || '分析中...'}</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.teaching_style')}</td>
+          <td style="padding:10px 12px;color:var(--ink-2)">${p.teaching_style || t('detail.analyzing')}</td>
         </tr>
         <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">性格特征</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.traits')}</td>
           <td style="padding:10px 12px">${(p.personality_traits || []).map(t => `<span style="display:inline-block;background:#FEF3C7;border:1px solid #FDE68A;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:#92400E">${t}</span>`).join('')}</td>
         </tr>
         <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
         <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">典型问题</td>
+          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.questions')}</td>
           <td style="padding:10px 12px">
             <ol style="margin:0;padding-left:20px;font-size:13px">
               ${(p.typical_questions || []).map(q => `<li style="margin-bottom:4px;color:var(--ink-2)">${q}</li>`).join('')}
@@ -1190,12 +1697,12 @@ async function viewPersonaDetail(id) {
       </table>
 
       <details style="margin-top:20px">
-        <summary style="cursor:pointer;font-size:13px;color:var(--ink-4)">🤖 查看 LLM 风格指令</summary>
+        <summary style="cursor:pointer;font-size:13px;color:var(--ink-4)">${t('detail.llm_prompt')}</summary>
         <pre style="background:var(--paper);padding:12px;border-radius:8px;font-size:12px;margin-top:8px;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)">${(p.style_prompt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
       </details>
     `;
   } catch(e) {
-    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">❌ 加载失败: ${e.message}</div>`;
+    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">${t('detail.load_fail')}${e.message}</div>`;
   }
 }
 
@@ -1231,26 +1738,26 @@ async function uploadResume(file) {
     }
     const data = await res.json();
 
-    document.getElementById('resumeStatus').textContent = '✅ 已上传';
+    document.getElementById('resumeStatus').textContent = getLanguage() === 'en' ? '✅ Uploaded' : '✅ 已上传';
     document.getElementById('resumeName').textContent = data.filename;
     document.getElementById('resumeInfo').style.display = '';
-    showToast('✅ 简历上传成功', 'success');
+    showToast(t('toast.resume_success'), 'success');
   } catch (e) {
-    document.getElementById('resumeStatus').textContent = '❌ 上传失败';
-    showToast('❌ 简历上传失败: ' + e.message, 'error');
+    document.getElementById('resumeStatus').textContent = '❌ ' + (getLanguage() === 'en' ? 'Upload failed' : '上传失败');
+    showToast(t('toast.upload_fail') + e.message, 'error');
   }
 }
 
 async function deleteResume() {
   try {
     const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('删除失败');
-    document.getElementById('resumeStatus').textContent = '尚未上传';
+    if (!res.ok) throw new Error(t('toast.resume_delete_fail'));
+    document.getElementById('resumeStatus').textContent = t('step.resume.not_uploaded');
     document.getElementById('resumeInfo').style.display = 'none';
     document.getElementById('resumeFileInput').value = '';
-    showToast('🗑️ 简历已删除', 'success');
+    showToast(t('settings.resume_deleted'), 'success');
   } catch (e) {
-    showToast('❌ 删除失败: ' + e.message, 'error');
+    showToast(t('toast.delete_fail') + e.message, 'error');
   }
 }
 
@@ -1273,14 +1780,14 @@ async function loadResumeStatus() {
 // ══════════════════════════════════════════════════
 
 async function deletePersona(id, name) {
-  if (!confirm(`确定要删除导师 "${name}" 的面试官画像吗？（删除后不可恢复）`)) return;
+  if (!confirm(t('confirm.delete_persona', { name }))) return;
   try {
     const res = await fetch(`${API}/api/personas/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.detail || '删除失败');
+      throw new Error(data.detail || t('toast.delete_fail'));
     }
-    showToast(`🗑️ 已删除 "${name}"`, 'success');
+    showToast(t('confirm.delete_persona_done', { name }), 'success');
     await loadPersonas();
     if (state.personaId === id) {
       state.personaId = null;
@@ -1353,7 +1860,7 @@ function skipOnboarding() {
   // 标记已引导
   setStorage('hasOnboarded', true);
   closeOnboarding();
-  showToast('👋 可以在设置中随时上传背景文件', 'success');
+  showToast(t('onboard.skipped'), 'success');
 }
 
 /**
@@ -1371,13 +1878,13 @@ async function confirmOnboarding() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.detail || '上传失败');
+        throw new Error(err.detail || t('toast.upload_fail'));
       }
       const data = await res.json();
       state.backgroundFileName = data.filename;
-      showToast(`✅ 已上传: ${data.filename}`, 'success');
+      showToast(t('onboard.uploaded') + data.filename, 'success');
     } catch(e) {
-      showToast('❌ 上传失败: ' + e.message, 'error');
+      showToast(t('toast.upload_fail') + e.message, 'error');
     }
   }
 
@@ -1415,11 +1922,11 @@ async function updateSettingsUI() {
       bgInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} 字符)</span></div>`;
       deleteBtn.style.display = 'inline-block';
     } else {
-      bgInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传背景文件</div>';
+      bgInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.bg_none') + '</div>';
       deleteBtn.style.display = 'none';
     }
   } catch(e) {
-    document.getElementById('settingsBgInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">查询失败</div>';
+    document.getElementById('settingsBgInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.query_fail') + '</div>';
   }
 
   // 2. 面试官信息
@@ -1433,7 +1940,7 @@ async function updateSettingsUI() {
       personaInfo.innerHTML = `<span style="font-size:13px;color:var(--ink-3)">${state.personaId}</span>`;
     }
   } else {
-    personaInfo.innerHTML = '<span style="font-size:13px;color:var(--ink-4)">未选择面试官</span>';
+    personaInfo.innerHTML = '<span style="font-size:13px;color:var(--ink-4)">' + t('settings.persona_none') + '</span>';
   }
 
   // 3. 简历信息
@@ -1444,14 +1951,14 @@ async function updateSettingsUI() {
     const deleteBtn = document.getElementById('settingsDeleteResume');
 
     if (data.has_resume) {
-      resumeInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} 字符)</span></div>`;
+      resumeInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} ${getLanguage() === 'en' ? 'chars' : '字符'})</span></div>`;
       deleteBtn.style.display = 'inline-block';
     } else {
-      resumeInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">未上传简历</div>';
+      resumeInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.resume_none') + '</div>';
       deleteBtn.style.display = 'none';
     }
   } catch(e) {
-    document.getElementById('settingsResumeInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">查询失败</div>';
+    document.getElementById('settingsResumeInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.query_fail') + '</div>';
   }
 }
 
@@ -1476,10 +1983,10 @@ async function handleSettingsFile(event) {
     }
     const data = await res.json();
     state.backgroundFileName = data.filename;
-    showToast(`✅ 已上传: ${data.filename}`, 'success');
+    showToast(t('settings.bg_success') + data.filename, 'success');
     updateSettingsUI();
   } catch(e) {
-    showToast('❌ 上传失败: ' + e.message, 'error');
+    showToast(t('toast.upload_fail') + e.message, 'error');
   }
 
   event.target.value = ''; // 重置 input
@@ -1489,15 +1996,15 @@ async function handleSettingsFile(event) {
  * 删除背景文件
  */
 async function deleteBackgroundFile() {
-  if (!confirm('确定删除背景文件吗？')) return;
+  if (!confirm(t('settings.bg_confirm_delete'))) return;
   try {
     const res = await fetch(`${API}/api/background`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('删除失败');
+    if (!res.ok) throw new Error(t('toast.delete_fail'));
     state.backgroundFileName = null;
-    showToast('🗑️ 背景文件已删除', 'success');
+    showToast(t('settings.bg_deleted'), 'success');
     updateSettingsUI();
   } catch(e) {
-    showToast('❌ 删除失败: ' + e.message, 'error');
+    showToast(t('toast.delete_fail') + e.message, 'error');
   }
 }
 
@@ -1517,24 +2024,24 @@ async function handleSettingsResume(event) {
     });
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.detail || '上传失败');
+      throw new Error(err.detail || t('toast.upload_fail'));
     }
-    showToast('✅ 简历上传成功', 'success');
+    showToast(t('settings.resume_success'), 'success');
     updateSettingsUI();
   } catch (e) {
-    showToast('❌ 简历上传失败: ' + e.message, 'error');
+    showToast(t('toast.upload_fail') + e.message, 'error');
   }
 }
 
 async function deleteSettingsResume() {
-  if (!confirm('确定删除简历吗？')) return;
+  if (!confirm(t('settings.resume_confirm_delete'))) return;
   try {
     const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('删除失败');
-    showToast('🗑️ 简历已删除', 'success');
+    if (!res.ok) throw new Error(t('toast.resume_delete_fail'));
+    showToast(t('settings.resume_deleted'), 'success');
     updateSettingsUI();
   } catch(e) {
-    showToast('❌ 删除失败: ' + e.message, 'error');
+    showToast(t('toast.delete_fail') + e.message, 'error');
   }
 }
 
@@ -1543,7 +2050,7 @@ async function deleteSettingsResume() {
 // ══════════════════════════════════════════════════
 
 async function startInterview() {
-  if (!state.personaId) { alert('请先选择一个面试官人格'); return; }
+  if (!state.personaId) { alert(t('error.select_persona')); return; }
 
   const fieldSelect = document.getElementById('fieldSelect');
   const customField = document.getElementById('customField');
@@ -1555,7 +2062,7 @@ async function startInterview() {
   } else {
     state.field = fieldSelect.value === '其他（请自定义）' ? customField.value.trim() : fieldSelect.value;
   }
-  if (!state.field) { alert('请输入/选择目标专业方向'); return; }
+  if (!state.field) { alert(t('error.select_field')); return; }
 
   // 保存到 localStorage（用于下次自动恢复）
   setStorage('lastPersonaId', state.personaId);
@@ -1563,13 +2070,14 @@ async function startInterview() {
 
   const btn = document.getElementById('startBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ 连接中...';
+  btn.textContent = t('btn.wait_connect');
 
   try {
     // 构建请求体，如果有背景文件则携带 content
     const body = {
       persona_id: state.personaId,
-      field: state.field
+      field: state.field,
+      language: getLanguage()
     };
 
     // 从后端获取背景文件内容
@@ -1598,9 +2106,9 @@ async function startInterview() {
     document.getElementById('chatStatus').style.display = 'flex';
     document.getElementById('inputArea').style.display = 'flex';
     document.getElementById('endBtn').style.display = 'inline-block';
-    document.getElementById('startBtn').textContent = '🔄 新面试';
+    document.getElementById('startBtn').textContent = t('btn.new_interview');
 
-    updateStatus('面试进行中', 'dot');
+    updateStatus(t('status.interviewing'), 'dot');
 
     setInputEnabled(true);
     document.getElementById('messageInput').focus();
@@ -1608,10 +2116,10 @@ async function startInterview() {
     // 显示第一个问题
     addMessage('interviewer', data.question);
   } catch(e) {
-    alert('启动面试失败: ' + e.message);
+    alert(t('error.start_fail') + e.message);
   } finally {
     btn.disabled = false;
-    if (!state.isInterviewing) btn.textContent = '▶ 开始面试';
+    if (!state.isInterviewing) btn.textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
   }
 }
 
@@ -1625,7 +2133,7 @@ async function sendMessage() {
 
   // 禁用输入
   setInputEnabled(false);
-  updateStatus('面试官思考中...', 'pending');
+  updateStatus(t('status.thinking'), 'pending');
 
   try {
     const res = await fetch(`${API}/api/interview/respond`, {
@@ -1637,9 +2145,9 @@ async function sendMessage() {
     if (data.error) throw new Error(data.error);
 
     addMessage('interviewer', data.question);
-    updateStatus('面试进行中', 'dot');
+    updateStatus(t('status.interviewing'), 'dot');
   } catch(e) {
-    addMessage('interviewer', `⚠️ 回复获取失败: ${e.message}。请稍后重试。`);
+    addMessage('interviewer', `${t('msg.error_prefix')}${e.message}${t('msg.error_retry')}`);
   } finally {
     setInputEnabled(true);
     input.focus();
@@ -1648,10 +2156,10 @@ async function sendMessage() {
 
 async function endInterview() {
   if (!state.sessionId) return;
-  if (!confirm('确定结束本次面试并生成反馈报告吗？')) return;
+  if (!confirm(t('confirm.end_interview'))) return;
 
   setInputEnabled(false);
-  updateStatus('生成反馈报告中...', 'pending');
+  updateStatus(t('status.generating'), 'pending');
 
   // 显示加载弹窗
   document.getElementById('loadingModal').classList.add('show');
@@ -1671,7 +2179,7 @@ async function endInterview() {
     goToWelcomeScreen();
   } catch(e) {
     document.getElementById('loadingModal').classList.remove('show');
-    alert('生成反馈失败: ' + e.message);
+    alert(t('error.generating') + e.message);
     goToWelcomeScreen();
   }
 
@@ -1680,7 +2188,7 @@ async function endInterview() {
   document.getElementById('endBtn').style.display = 'none';
   document.getElementById('inputArea').style.display = 'none';
   document.getElementById('chatStatus').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ 开始面试';
+  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
 }
 
 /**
@@ -1689,7 +2197,7 @@ async function endInterview() {
 function returnToSetup() {
   if (!state.isInterviewing) return;
 
-  if (!confirm('确定退出当前面试吗？对话记录将被保留至结束面试。')) return;
+  if (!confirm(t('confirm.exit_interview'))) return;
 
   state.isInterviewing = false;
   // 不清除 sessionId，这样数据还在，但用户回到欢迎页
@@ -1697,7 +2205,7 @@ function returnToSetup() {
   document.getElementById('chatStatus').style.display = 'none';
   document.getElementById('inputArea').style.display = 'none';
   document.getElementById('endBtn').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ 开始面试';
+  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
 
   // 清空消息列表（保留欢迎页）
   const messages = document.getElementById('messages');
@@ -1720,13 +2228,11 @@ function addMessage(role, text) {
   const msg = document.createElement('div');
   msg.className = `message ${role}`;
 
-  const label = role === 'interviewer'
-    ? (state.personaName ? `面试官 · ${state.personaName}` : '面试官')
-    : '你';
+  const base = role === 'interviewer' ? (state.personaName ? t('msg.interviewer_with') + state.personaName : t('msg.interviewer')) : t('msg.you');
 
   msg.innerHTML = `
     <div class="bubble">
-      <div class="label">${label}</div>
+      <div class="label">${base}</div>
       ${text}
     </div>
   `;
@@ -1762,17 +2268,17 @@ function closeFeedback() {
 
 function downloadSummary() {
   if (!_lastFeedback) {
-    showToast('❌ 没有可下载的面试总结', 'error');
+    showToast(t('feedback.no_data'), 'error');
     return;
   }
 
   // 构建下载内容
   const now = new Date();
-  const timestamp = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-  const content = `=== Interview Mate — 面试评估报告 ===\n\n` +
-    `日期: ${timestamp}\n` +
-    `面试官: ${state.personaName || '未知'}\n` +
-    `方向: ${state.field || '未知'}\n` +
+  const timestamp = now.toLocaleString(getLanguage() === 'en' ? 'en-US' : 'zh-CN', { timeZone: 'Asia/Shanghai' });
+  const content = `${t('download.header')}\n\n` +
+    `${t('download.date')}${timestamp}\n` +
+    `${t('download.interviewer')}${state.personaName || t('download.unknown')}\n` +
+    `${t('download.field')}${state.field || t('download.unknown')}\n` +
     `${'='.repeat(40)}\n\n` +
     `${_lastFeedback}`;
 
@@ -1788,7 +2294,7 @@ function downloadSummary() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showToast('📥 面试总结已下载', 'success');
+  showToast(t('toast.downloaded'), 'success');
 }
 
 /**
@@ -1799,7 +2305,7 @@ function goToWelcomeScreen() {
   document.getElementById('chatStatus').style.display = 'none';
   document.getElementById('inputArea').style.display = 'none';
   document.getElementById('endBtn').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ 开始面试';
+  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
 
   // 清空所有聊天消息（保留欢迎页）
   const messages = document.getElementById('messages');
@@ -1837,7 +2343,7 @@ function setupSpeechInput() {
   } else {
     // 浏览器不支持 Web Speech → 强制后端模式
     useBackendSTT = true;
-    micBtn.title = '录制音频发往后端转写';
+    micBtn.title = getLanguage() === 'en' ? 'Record audio for backend transcription' : '录制音频发往后端转写';
     updateSTTLabel();
   }
 }
@@ -1854,8 +2360,8 @@ function initWebSpeech() {
     recognitionFinalBuf = '';
     document.getElementById('micBtn').textContent = '⏹️';
     document.getElementById('micBtn').classList.add('recording');
-    document.getElementById('micBtn').title = '点击停止录音';
-    updateStatus('🎤 录音中...', 'pending');
+    document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Click to stop recording' : '点击停止录音';
+    updateStatus(t('status.recording'), 'pending');
   };
 
   recognition.onresult = (event) => {
@@ -1872,20 +2378,20 @@ function initWebSpeech() {
     if (recognitionFinalBuf) {
       input.value = recognitionFinalBuf;
     }
-    input.placeholder = interimText ? interimText + '...' : '输入你的回答...';
+    input.placeholder = interimText ? interimText + '...' : t('input.placeholder');
   };
 
   recognition.onerror = (event) => {
     if (event.error === 'not-allowed') {
       stopRecording();
-      showToast('🎤 麦克风权限被拒绝，请在浏览器设置中允许', 'error');
+      showToast(t('toast.stt_mic_blocked'), 'error');
     } else if (event.error === 'service-not-allowed') {
       stopRecording();
-      showToast('🌐 浏览器语音服务不可用，已自动切换为「后端转写」模式', 'error');
+      showToast(t('toast.stt_service_unavail'), 'error');
       switchToBackendSTT();
     } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
       stopRecording();
-      showToast('🎤 识别出错，已切换为「后端转写」模式: ' + event.error, 'error');
+      showToast(t('toast.stt_error') + event.error, 'error');
       switchToBackendSTT();
     }
   };
@@ -1900,21 +2406,21 @@ function initWebSpeech() {
 function switchToBackendSTT() {
   useBackendSTT = true;
   updateSTTLabel();
-  document.getElementById('micBtn').title = '录制音频发往后端转写';
+  document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Record audio for backend transcription' : '录制音频发往后端转写';
 }
 
 function updateSTTLabel() {
   const label = document.getElementById('sttModeLabel');
   if (useBackendSTT) {
-    label.innerHTML = '🔧 后端转写';
+    label.textContent = t('stt.backend');
     label.className = 'stt-mode backend';
-    label.title = '点击切换到浏览器语音识别';
+    label.title = getLanguage() === 'en' ? 'Click to switch to browser STT' : '点击切换到浏览器语音识别';
   } else {
-    label.innerHTML = '🌐 浏览器识别';
+    label.textContent = t('stt.browser');
     label.className = 'stt-mode';
     label.title = hasWebSpeech
-      ? '点击切换到后端转写（国内网络推荐）'
-      : '浏览器不支持，请使用后端转写';
+      ? (getLanguage() === 'en' ? 'Click to switch to backend STT' : '点击切换到后端转写（国内网络推荐）')
+      : (getLanguage() === 'en' ? 'Browser STT unavailable, use backend' : '浏览器不支持，请使用后端转写');
   }
 }
 
@@ -1925,8 +2431,8 @@ function toggleSTTMode() {
   useBackendSTT = !useBackendSTT;
   updateSTTLabel();
   showToast(useBackendSTT
-    ? '🔧 已切换到「后端转写」模式'
-    : '🌐 已切换到「浏览器识别」模式', 'success');
+    ? t('toast.stt_switch_backend')
+    : t('toast.stt_switch_browser'), 'success');
 }
 
 function toggleMic() {
@@ -1971,7 +2477,7 @@ async function startRecording() {
         micBtn.classList.remove('recording');
         micBtn.classList.add('processing');
         micBtn.textContent = '⏳';
-        updateStatus('🎤 转写中...', 'pending');
+        updateStatus(t('status.transcribing'), 'pending');
 
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const formData = new FormData();
@@ -1994,28 +2500,28 @@ async function startRecording() {
             sendMessage();
           }
         } catch (e) {
-          showToast('❌ 语音转写失败: ' + e.message, 'error');
+          showToast(t('toast.stt_fail') + e.message, 'error');
         } finally {
           micBtn.classList.remove('processing');
           micBtn.textContent = '🎤';
-          micBtn.title = '语音输入';
-          updateStatus('面试进行中', 'dot');
+          micBtn.title = getLanguage() === 'en' ? 'Voice input' : '语音输入';
+          updateStatus(t('status.interviewing'), 'dot');
         }
       };
 
       isRecording = true;
       micBtn.textContent = '⏹️';
       micBtn.classList.add('recording');
-      micBtn.title = '点击停止录音';
-      updateStatus('🎤 录音中... (后端转写)', 'pending');
+      micBtn.title = getLanguage() === 'en' ? 'Click to stop recording' : '点击停止录音';
+      updateStatus(t('status.backend_recording'), 'pending');
       mediaRecorder.start();
     } catch (e) {
-      showToast('❌ 无法访问麦克风: ' + e.message, 'error');
+      showToast(t('toast.mic_unavail') + e.message, 'error');
     }
   } else {
     // 🅰️ Web Speech API 模式
     if (!recognition) {
-      showToast('❌ 语音识别未初始化', 'error');
+      showToast(t('toast.stt_uninit'), 'error');
       return;
     }
     try {
@@ -2038,8 +2544,8 @@ function stopRecording() {
   micBtn.textContent = '🎤';
   micBtn.classList.remove('recording');
   micBtn.classList.remove('processing');
-  micBtn.title = '语音输入';
-  input.placeholder = '输入你的回答...';
+  micBtn.title = getLanguage() === 'en' ? 'Voice input' : '语音输入';
+  input.placeholder = t('input.placeholder');
 
   if (recognition) {
     try {
@@ -2054,7 +2560,7 @@ function stopRecording() {
     sendMessage();
   }
 
-  updateStatus('面试进行中', 'dot');
+  updateStatus(t('status.interviewing'), 'dot');
 }
 
 // ══════════════════════════════════════════════════

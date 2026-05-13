@@ -11,6 +11,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # ═══════════════════════════════════════════════════
@@ -52,6 +54,7 @@ class StartRequest(BaseModel):
     field: str
     background: str | None = None  # 可选的项目背景文件内容
     resume: str | None = None     # 可选的个人简历内容
+    language: str = "zh"          # 面试语言: zh / en
 
 class ContinueRequest(BaseModel):
     session_id: str
@@ -65,6 +68,7 @@ class ExtractRequest(BaseModel):
     affiliation: str = ""
     papers: list[str] = []
     materials: list[str] = []
+    language: str = "zh"  # 输出语言: zh / en
 
 
 # ═══════════════════════════════════════════════════
@@ -297,14 +301,14 @@ async def health():
     return {"status": "ok", "version": "0.2.0"}
 
 @app.get("/api/personas")
-async def list_personas():
+async def list_personas(language: str = "zh"):
     """获取所有可用的面试官人格"""
-    return {"personas": get_all_personas()}
+    return {"personas": get_all_personas(language=language)}
 
 @app.get("/api/personas/{pid}")
-async def get_persona_detail(pid: str):
+async def get_persona_detail(pid: str, language: str = "zh"):
     """获取某个面试官人格详情"""
-    p = get_persona(pid)
+    p = get_persona(pid, language=language)
     if not p:
         raise HTTPException(status_code=404, detail="Persona not found")
     return {"persona": p}
@@ -317,7 +321,7 @@ async def extract_persona(req: ExtractRequest):
     用 DeepSeek 分析生成真实导师画像，存入 SQLite。
     """
     try:
-        result = await extract_persona_async(req.name, req.affiliation)
+        result = await extract_persona_async(req.name, req.affiliation, language=req.language)
         return {"persona": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"提取失败: {str(e)}")
@@ -346,7 +350,7 @@ async def interview_start(req: StartRequest):
     if not resume:
         resume_meta = _load_resume_meta()
         resume = resume_meta.get("content")
-    result = await start_interview(req.persona_id, req.field, background=background, resume=resume)
+    result = await start_interview(req.persona_id, req.field, background=background, resume=resume, language=req.language)
     return result
 
 @app.post("/api/interview/respond")
@@ -480,6 +484,21 @@ async def _local_stt(audio_bytes: bytes) -> dict:
             detail=f"本地语音转写失败: {str(e)}"
         )
 
+
+# ═══════════════════════════════════════════════════
+# 静态文件服务（生产环境：前端由后端统一托管）
+# ═══════════════════════════════════════════════════
+
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+if FRONTEND_DIR.exists():
+    @app.get("/")
+    async def serve_frontend_root():
+        return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+    # 托管前端静态文件（CSS、JS、图片等）
+    # 注意：此 mount 必须在所有 API 路由之后
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    print(f"📂 前端文件: {FRONTEND_DIR}")
 
 # ═══════════════════════════════════════════════════
 # 启动
