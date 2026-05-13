@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from duckduckgo_search import DDGS
 from pydantic import BaseModel
 
 # ── 通用面试官人格 ──────────────────────────────────
@@ -283,7 +282,7 @@ async def search_arxiv(name: str, max_results: int = 15) -> list[dict]:
 # ── 2. 网络搜索 ───────────────────────────────────
 
 async def search_web(name: str, affiliation: str = "", max_results: int = 5) -> list[dict]:
-    """用 DuckDuckGo 搜索导师公开信息"""
+    """用 DuckDuckGo HTML 搜索导师公开信息（绕过 API 限制）"""
     results = []
     query_terms = [name]
     if affiliation:
@@ -291,13 +290,46 @@ async def search_web(name: str, affiliation: str = "", max_results: int = 5) -> 
     query = " ".join(query_terms)
 
     try:
-        with DDGS() as ddgs:
-            for i, r in enumerate(ddgs.text(query, max_results=max_results)):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("href", ""),
-                    "body": r.get("body", ""),
-                })
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(
+                "https://html.duckduckgo.com/html/",
+                params={"q": query},
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+            )
+            if resp.status_code == 200:
+                # 解析 HTML 结果
+                import re
+                # 提取结果块
+                result_blocks = re.findall(
+                    r'<h2 class="result__title[^>]*>.*?<a[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?<a[^>]*class="result__snippet[^>]*>(.*?)</a>',
+                    resp.text, re.DOTALL
+                )
+                for url, title, snippet in result_blocks[:max_results]:
+                    # 清理 HTML 标签
+                    title = re.sub(r'<[^>]+>', '', title).strip()
+                    snippet = re.sub(r'<[^>]+>', '', snippet).strip()
+                    results.append({
+                        "title": title,
+                        "url": url,
+                        "body": snippet,
+                    })
+                
+                # 备用解析：如果上面的正则没匹配到，尝试更宽松的匹配
+                if not results:
+                    all_links = re.findall(
+                        r'<a[^>]*class="result__a[^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+                        resp.text, re.DOTALL
+                    )
+                    snippets = re.findall(
+                        r'<a[^>]*class="result__snippet[^>]*>(.*?)</a>',
+                        resp.text, re.DOTALL
+                    )
+                    for i, (url, title) in enumerate(all_links[:max_results]):
+                        title = re.sub(r'<[^>]+>', '', title).strip()
+                        snippet = re.sub(r'<[^>]+>', '', snippets[i]).strip() if i < len(snippets) else ""
+                        results.append({"title": title, "url": url, "body": snippet})
     except Exception as e:
         print(f"[WARN] 网络搜索失败: {e}")
 
