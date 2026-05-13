@@ -77,8 +77,8 @@
               <h3 data-i18n="step.resume.title">上传个人简历 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
               <p class="helper" data-i18n="step.resume.helper">上传你的简历，面试官将会阅读并根据你的背景和经历进行针对性提问。</p>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <label class="btn btn-outline" style="cursor:pointer;display:inline-flex" data-i18n="step.resume.select_btn">
-                  📄 选择文件
+                <label class="btn btn-outline" id="resumeSelectLabel" style="cursor:pointer;display:inline-flex">
+                  📄 <span id="resumeBtnText">选择文件</span>
                   <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleResumeFile(event)" />
                 </label>
                 <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)" data-i18n="step.resume.not_uploaded">尚未上传</span>
