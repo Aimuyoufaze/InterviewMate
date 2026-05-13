@@ -1455,12 +1455,12 @@ async function loadPersonas() {
     renderPersonas(data.personas);
   } catch(e) {
     console.error('加载面试官列表失败', e);
-    // 兜底数据
+    // 兜底数据（使用 t() 函数以支持语言切换）
     renderPersonas({
-      strict: { id:'strict', name:'严厉型', description:'要求严格，喜欢追问细节', type:'general', avatar_emoji:'😤' },
-      gentle: { id:'gentle', name:'温和型', description:'鼓励式引导，会给出提示', type:'general', avatar_emoji:'😊' },
-      probing: { id:'probing', name:'追问型', description:'层层深入，测试知识深度', type:'general', avatar_emoji:'🔍' },
-      socratic: { id:'socratic', name:'苏格拉底型', description:'通过反问引导思考', type:'general', avatar_emoji:'🧠' }
+      strict: { id:'strict', name: getLanguage() === 'en' ? 'Strict' : '严厉型', description: getLanguage() === 'en' ? 'Demanding and detail-oriented, not easily impressed' : '要求严格，喜欢追问细节', type:'general', avatar_emoji:'😤' },
+      gentle: { id:'gentle', name: getLanguage() === 'en' ? 'Gentle' : '温和型', description: getLanguage() === 'en' ? 'Encouraging and supportive, offers hints when stuck' : '鼓励式引导，会给出提示', type:'general', avatar_emoji:'😊' },
+      probing: { id:'probing', name: getLanguage() === 'en' ? 'Probing' : '追问型', description: getLanguage() === 'en' ? 'Follow-up questions drill deep into knowledge' : '层层深入，测试知识深度', type:'general', avatar_emoji:'🔍' },
+      socratic: { id:'socratic', name: getLanguage() === 'en' ? 'Socratic' : '苏格拉底型', description: getLanguage() === 'en' ? 'Uses counter-questions to guide self-discovery' : '通过反问引导思考', type:'general', avatar_emoji:'🧠' }
     });
   }
 }
