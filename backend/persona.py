@@ -295,7 +295,7 @@ async def search_web(name: str, affiliation: str = "", max_results: int = 5) -> 
                 "https://html.duckduckgo.com/html/",
                 params={"q": query},
                 headers={
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (compatible; InterviewMate/1.0)"
                 }
             )
             if resp.status_code == 200:
