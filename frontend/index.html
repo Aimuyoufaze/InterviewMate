@@ -427,18 +427,7 @@ main, .messages, #welcomeScreen{
 .send-btn:hover{background:var(--red)}
 .send-btn:disabled{background:var(--ink-4);cursor:not-allowed}
 
-.stt-mode{
-  display:inline-flex;align-items:center;
-  font-size:11px;font-weight:500;
-  padding:0 10px;height:28px;align-self:center;
-  border-radius:999px;
-  background:var(--paper);color:var(--ink-3);
-  cursor:pointer;user-select:none;
-  letter-spacing:.02em;
-  transition:background .12s,color .12s;
-}
-.stt-mode:hover{background:var(--line);color:var(--ink)}
-.stt-mode.backend{background:#FEF3C7;color:#92400E}
+/* STT mode toggle removed - always uses backend Baidu API */
 
 /* ============ 弹窗（Modal）通用结构 ============ */
 .modal-overlay{
@@ -734,10 +723,8 @@ main, .messages, #welcomeScreen{
       <div class="input-area" id="inputArea" style="display:none">
         <div class="input-wrapper">
           <textarea id="messageInput" rows="1" placeholder="" disabled></textarea>
-          <span class="stt-mode" id="sttModeLabel" onclick="toggleSTTMode()" title="切换语音识别模式">浏览器识别</span>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <div style="display:flex;align-items:center;flex-shrink:0">
             <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入" disabled>🎤</button>
-            <span id="sttLabel" style="font-size:10px;color:var(--ink-4);white-space:nowrap;display:none"></span>
           </div>
           <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()" data-i18n="btn.send">发送</button>
         </div>
@@ -1324,9 +1311,6 @@ function applyLanguage() {
   const msgInput = document.getElementById('messageInput');
   if (msgInput) msgInput.placeholder = t('input.placeholder');
 
-  // Update stt label
-  updateSTTLabel();
-
   // Update settings UI if modal is open/loaded
   const settingsBgInfo = document.getElementById('settingsBgInfo');
   if (settingsBgInfo && !settingsBgInfo.querySelector('.file-info')) {
@@ -1541,7 +1525,6 @@ function createPersonaCard(p, isExtracted) {
   `;
   card.onclick = () => selectPersona(p.id, card);
   return card;
-}
 
 function selectPersona(id, el) {
   document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
@@ -2322,117 +2305,13 @@ function goToWelcomeScreen() {
 // 语音输入（STT）
 // ══════════════════════════════════════════════════
 
-let recognition = null;
 let mediaRecorder = null;
 let recordingStream = null;
 let isRecording = false;
-let recognitionFinalBuf = '';
-let useBackendSTT = false;
-// 自动检测 Web Speech API 可用性
-const hasWebSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
 function setupSpeechInput() {
-  const micBtn = document.getElementById('micBtn');
-  const label = document.getElementById('sttModeLabel');
-
-  if (hasWebSpeech) {
-    // 🅰️ 浏览器原生语音识别 (Chrome/Edge) — 默认首选
-    useBackendSTT = false;
-    initWebSpeech();
-    updateSTTLabel();
-  } else {
-    // 浏览器不支持 Web Speech → 强制后端模式
-    useBackendSTT = true;
-    micBtn.title = getLanguage() === 'en' ? 'Record audio for backend transcription' : '录制音频发往后端转写';
-    updateSTTLabel();
-  }
-}
-
-function initWebSpeech() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.lang = 'zh-CN';
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.onstart = () => {
-    isRecording = true;
-    recognitionFinalBuf = '';
-    document.getElementById('micBtn').textContent = '⏹️';
-    document.getElementById('micBtn').classList.add('recording');
-    document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Click to stop recording' : '点击停止录音';
-    updateStatus(t('status.recording'), 'pending');
-  };
-
-  recognition.onresult = (event) => {
-    let interimText = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const result = event.results[i];
-      if (result.isFinal) {
-        recognitionFinalBuf += result[0].transcript;
-      } else {
-        interimText += result[0].transcript;
-      }
-    }
-    const input = document.getElementById('messageInput');
-    if (recognitionFinalBuf) {
-      input.value = recognitionFinalBuf;
-    }
-    input.placeholder = interimText ? interimText + '...' : t('input.placeholder');
-  };
-
-  recognition.onerror = (event) => {
-    if (event.error === 'not-allowed') {
-      stopRecording();
-      showToast(t('toast.stt_mic_blocked'), 'error');
-    } else if (event.error === 'service-not-allowed') {
-      stopRecording();
-      showToast(t('toast.stt_service_unavail'), 'error');
-      switchToBackendSTT();
-    } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
-      stopRecording();
-      showToast(t('toast.stt_error') + event.error, 'error');
-      switchToBackendSTT();
-    }
-  };
-
-  recognition.onend = () => {
-    if (isRecording) {
-      try { recognition.start(); } catch(e) {}
-    }
-  };
-}
-
-function switchToBackendSTT() {
-  useBackendSTT = true;
-  updateSTTLabel();
-  document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Record audio for backend transcription' : '录制音频发往后端转写';
-}
-
-function updateSTTLabel() {
-  const label = document.getElementById('sttModeLabel');
-  if (useBackendSTT) {
-    label.textContent = t('stt.backend');
-    label.className = 'stt-mode backend';
-    label.title = getLanguage() === 'en' ? 'Click to switch to browser STT' : '点击切换到浏览器语音识别';
-  } else {
-    label.textContent = t('stt.browser');
-    label.className = 'stt-mode';
-    label.title = hasWebSpeech
-      ? (getLanguage() === 'en' ? 'Click to switch to backend STT' : '点击切换到后端转写（国内网络推荐）')
-      : (getLanguage() === 'en' ? 'Browser STT unavailable, use backend' : '浏览器不支持，请使用后端转写');
-  }
-}
-
-function toggleSTTMode() {
-  if (isRecording) {
-    stopRecording();
-  }
-  useBackendSTT = !useBackendSTT;
-  updateSTTLabel();
-  showToast(useBackendSTT
-    ? t('toast.stt_switch_backend')
-    : t('toast.stt_switch_browser'), 'success');
+  // Always uses backend Baidu STT API — no mode switching
+  document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Record audio' : '录制语音';
 }
 
 function toggleMic() {
@@ -2446,18 +2325,17 @@ function toggleMic() {
 async function startRecording() {
   const micBtn = document.getElementById('micBtn');
 
-  if (useBackendSTT) {
-    // 🅱️ MediaRecorder → 后端 Whisper API
-    try {
-      recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : (MediaRecorder.isTypeSupported('audio/mp4')
-            ? 'audio/mp4'
-            : ''));
-      mediaRecorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : {});
+  // MediaRecorder → Baidu STT API
+  try {
+    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+      ? 'audio/webm'
+      : (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : (MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : ''));
+    mediaRecorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : {});
       const chunks = [];
 
       mediaRecorder.ondataavailable = (e) => {
@@ -2518,15 +2396,6 @@ async function startRecording() {
     } catch (e) {
       showToast(t('toast.mic_unavail') + e.message, 'error');
     }
-  } else {
-    // 🅰️ Web Speech API 模式
-    if (!recognition) {
-      showToast(t('toast.stt_uninit'), 'error');
-      return;
-    }
-    try {
-      recognition.start();
-    } catch(e) {}
   }
 }
 
@@ -2535,26 +2404,16 @@ function stopRecording() {
   const micBtn = document.getElementById('micBtn');
   const input = document.getElementById('messageInput');
 
-  if (useBackendSTT && mediaRecorder && mediaRecorder.state !== 'inactive') {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
     return;
   }
 
-  // Web Speech API 停止
   micBtn.textContent = '🎤';
   micBtn.classList.remove('recording');
   micBtn.classList.remove('processing');
   micBtn.title = getLanguage() === 'en' ? 'Voice input' : '语音输入';
   input.placeholder = t('input.placeholder');
-
-  if (recognition) {
-    try {
-      const origOnEnd = recognition.onend;
-      recognition.onend = null;
-      recognition.stop();
-      recognition.onend = origOnEnd;
-    } catch(e) {}
-  }
 
   if (input.value.trim() && state.isInterviewing && !document.getElementById('sendBtn').disabled) {
     sendMessage();
@@ -2568,7 +2427,6 @@ function stopRecording() {
 // ══════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  setupSpeechInput();
   init();
 });
 </script>
