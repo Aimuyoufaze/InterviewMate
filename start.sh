@@ -41,9 +41,12 @@ fi
 echo "🚀 启动 Interview Mate..."
 
 # ═══════════════════════════════════════════════════
-# 确保 Python 控制台输出使用 UTF-8（GBK 无法渲染 emoji）
+# 确保 Python 控制台输出使用 UTF-8
 # ═══════════════════════════════════════════════════
 export PYTHONIOENCODING=utf-8
+if $IS_WINDOWS; then
+    chcp.com 65001 > /dev/null 2>&1
+fi
 
 # ═══════════════════════════════════════════════════
 # 启动后端（前端由 FastAPI StaticFiles 托管）
