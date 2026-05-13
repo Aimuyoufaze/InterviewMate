@@ -20,6 +20,3 @@ function removeStorage(key) {
 }
 
 export { getStorage, setStorage, removeStorage };
-window.getStorage = getStorage;
-window.setStorage = setStorage;
-window.removeStorage = removeStorage;

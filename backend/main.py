@@ -34,6 +34,8 @@ from persona import (
     GENERAL_PERSONAS, ExtractedPersona, delete_persona
 )
 from interview import start_interview, continue_interview, end_interview
+from chat import chat as main_agent_chat, AGENT_PROFILES
+from history import list_sessions, get_session as history_get_session
 
 app = FastAPI(title="Interview Mate", version="0.2.0")
 
@@ -51,10 +53,20 @@ app.add_middleware(
 
 class StartRequest(BaseModel):
     persona_id: str
+    persona_name: str = ""       # 面试官名称
     field: str
-    background: str | None = None  # 可选的项目背景文件内容
-    resume: str | None = None     # 可选的个人简历内容
-    language: str = "zh"          # 面试语言: zh / en
+    background: str | None = None
+    resume: str | None = None
+    language: str = "zh"
+
+class ChatRequest(BaseModel):
+    messages: list[dict]          # [{"role":"user/assistant","content":"..."}]
+    language: str = "zh"
+    agent_profile: dict | None = None
+    resume_content: str = ""
+    background_content: str = ""
+    user_name: str = ""
+    is_first_visit: bool = False
 
 class ContinueRequest(BaseModel):
     session_id: str
@@ -350,7 +362,7 @@ async def interview_start(req: StartRequest):
     if not resume:
         resume_meta = _load_resume_meta()
         resume = resume_meta.get("content")
-    result = await start_interview(req.persona_id, req.field, background=background, resume=resume, language=req.language)
+    result = await start_interview(req.persona_id, req.field, background=background, resume=resume, language=req.language, persona_name=req.persona_name)
     return result
 
 @app.post("/api/interview/respond")
@@ -486,6 +498,68 @@ async def _local_stt(audio_bytes: bytes) -> dict:
 
 
 # ═══════════════════════════════════════════════════
+# Main Agent 聊天
+# ═══════════════════════════════════════════════════
+
+@app.post("/api/chat")
+async def agent_chat(req: ChatRequest):
+    """Main Agent 对话——面试备考陪伴助手"""
+    try:
+        result = await main_agent_chat(
+            messages=req.messages,
+            language=req.language,
+            agent_profile=req.agent_profile,
+            resume_content=req.resume_content,
+            background_content=req.background_content,
+            user_name=req.user_name,
+            is_first_visit=req.is_first_visit
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"对话失败: {str(e)}")
+
+
+@app.get("/api/agent/profiles")
+async def get_agent_profiles(language: str = "zh"):
+    """返回可用的 Main Agent 预设人格列表"""
+    profiles = []
+    for key, profile in AGENT_PROFILES.items():
+        profiles.append({
+            "id": key,
+            "name": profile.get("name_zh" if language == "zh" else "name_en", key),
+        })
+    return {"profiles": profiles}
+
+
+# ═══════════════════════════════════════════════════
+# 面试历史
+# ═══════════════════════════════════════════════════
+
+@app.get("/api/history")
+async def get_history():
+    """返回所有已完成面试的列表"""
+    return {"sessions": list_sessions()}
+
+
+@app.get("/api/history/{session_id}")
+async def get_history_detail(session_id: str):
+    """返回某个已完成面试的完整记录"""
+    session = history_get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="历史记录不存在")
+    return {"session": session}
+
+
+@app.delete("/api/history/{session_id}")
+async def delete_history(session_id: str):
+    """删除一条历史记录"""
+    from history import delete_session
+    if not delete_session(session_id):
+        raise HTTPException(status_code=404, detail="历史记录不存在")
+    return {"message": "已删除"}
+
+
+# ═══════════════════════════════════════════════════
 # 静态文件服务（生产环境：前端由后端统一托管）
 # ═══════════════════════════════════════════════════
 
@@ -498,7 +572,7 @@ if FRONTEND_DIR.exists():
     # 托管前端静态文件（CSS、JS、图片等）
     # 注意：此 mount 必须在所有 API 路由之后
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-    print(f"📂 前端文件: {FRONTEND_DIR}")
+    print(f"[OK] Frontend: {FRONTEND_DIR}")
 
 # ═══════════════════════════════════════════════════
 # 启动

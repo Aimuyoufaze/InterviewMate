@@ -8,45 +8,87 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-
-  <!-- Shared JS modules (ESM) -->
-  <script type="module" src="js/shared/config.js"></script>
-  <script type="module" src="js/shared/state.js"></script>
-  <script type="module" src="js/shared/storage.js"></script>
-  <script type="module" src="js/shared/i18n.js"></script>
-  <script type="module" src="js/shared/toast.js"></script>
+<script type="module" src="js/sidebar.js"></script>
 </head>
 <body>
 
 <div id="app">
 
 <header>
-  <!-- 点击 logo 回到欢迎页（仅当在面试中时有用） -->
-  <h1 onclick="if(state.isInterviewing)returnToSetup()">Interview <i>Mate</i></h1>
+  <h1>Interview <i>Mate</i></h1>
   <div class="nav">
-    <button id="langToggle" onclick="toggleLanguage()" title="切换语言" style="width:36px;height:36px;border:none;background:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink-3);cursor:pointer;transition:background .12s,color .12s;flex-shrink:0">🇨🇳</button>
-    <button id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
-    <button class="btn btn-outline btn-sm" onclick="endInterview()" id="endBtn" style="display:none" data-i18n="btn.end_interview">结束面试</button>
+    <button id="langToggle" title="切换语言">🇨🇳</button>
   </div>
 </header>
 
 <div class="app-container">
 
-  <div class="sidebar">
-    <div class="chat-area">
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 左侧导航菜单                          -->
+  <!-- ══════════════════════════════════════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-list">
+      <button class="nav-item active" data-view="chat">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label" data-i18n="nav.chat">对话</span>
+      </button>
+      <button class="nav-item" data-view="interview">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label" data-i18n="nav.interview">模拟面试</span>
+      </button>
+      <button class="nav-item" data-view="history">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label" data-i18n="nav.history">历史记录</span>
+      </button>
+    </div>
 
-      <div class="messages" id="messages">
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">👤</div>
+        <div class="user-info">
+          <span class="user-name" id="sidebarUserName">User</span>
+          <span class="user-resume" id="sidebarResumeStatus" data-i18n="sidebar.resume_status">简历：未上传</span>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="btn btn-sm btn-outline" id="sidebarProfileBtn" data-i18n="sidebar.profile">编辑资料</button>
+        <button class="btn btn-sm btn-outline" id="sidebarAgentBtn" data-i18n="sidebar.agent">配置 Agent</button>
+      </div>
+    </div>
+  </nav>
 
-        <!-- ============= 欢迎 / 设置页面 ============= -->
-        <div id="welcomeScreen">
+  <!-- ══════════════════════════════════════════ -->
+  <!-- 主内容区                              -->
+  <!-- ══════════════════════════════════════════ -->
+  <main class="content">
 
+    <!-- ── View 1: Main Agent 对话 ── -->
+    <div class="view-container" id="view-chat">
+      <div class="chat-header">
+        <h2 data-i18n="chat.title">Interview Mate</h2>
+        <button class="btn btn-outline btn-sm" id="clearChatBtn" data-i18n="chat.clear">清空对话</button>
+      </div>
+      <div class="messages" id="chatMessages"></div>
+      <div class="input-area" id="chatInputArea">
+        <div class="input-wrapper">
+          <textarea id="chatMessageInput" rows="1" placeholder="" data-i18n="chat.placeholder"></textarea>
+          <button class="send-btn" id="chatSendBtn" data-i18n="btn.send">发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── View 2: 模拟面试 ── -->
+    <div class="view-container" id="view-interview" style="display:none">
+
+      <!-- 面试 Setup -->
+      <div id="interviewSetup">
+        <div class="messages" id="welcomeScreen">
           <div class="welcome-hero">
             <span class="eyebrow" data-i18n="welcome.eyebrow">Mock Interview</span>
             <h2 data-i18n="welcome.title" data-i18n-html="true">开启一场<br/>认真的<i>模拟面试</i>。</h2>
             <p data-i18n="welcome.desc">选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。</p>
           </div>
 
-          <!-- 步骤 01 — 选择面试官 -->
           <div class="setup-section">
             <div class="num">01</div>
             <div class="body">
@@ -56,42 +98,39 @@
             </div>
           </div>
 
-          <!-- 步骤 02 — 导师蒸馏 -->
           <div class="setup-section">
             <div class="num">02</div>
             <div class="body">
-              <h3 data-i18n="step.extract.title">蒸馏一位导师 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <h3><span data-i18n="step.extract.title">蒸馏一位导师</span> <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
               <p class="helper" data-i18n="step.extract.helper">输入导师姓名与所属机构，利用 AI 分析其论文和公开信息，自动生成专属面试官。</p>
               <div class="extract-form">
                 <input type="text" id="extractName" placeholder="" />
                 <input type="text" id="extractAffil" placeholder="" />
-                <button class="btn btn-outline btn-sm" onclick="extractPersona()" id="extractBtn" data-i18n="step.extract.btn">🎯 提取 Persona</button>
+                <button class="btn btn-outline btn-sm" id="extractBtn" data-i18n="step.extract.btn">🎯 提取 Persona</button>
               </div>
             </div>
           </div>
 
-          <!-- 步骤 03 — 个人简历（可选） -->
           <div class="setup-section">
             <div class="num">03</div>
             <div class="body">
-              <h3 data-i18n="step.resume.title">上传个人简历 <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <h3><span data-i18n="step.resume.title">上传个人简历</span> <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
               <p class="helper" data-i18n="step.resume.helper">上传你的简历，面试官将会阅读并根据你的背景和经历进行针对性提问。</p>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <label class="btn btn-outline" style="cursor:pointer;display:inline-flex" data-i18n="step.resume.select_btn">
-                  📄 选择文件
-                  <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleResumeFile(event)" />
+                <label class="btn btn-outline resume-select-label" style="cursor:pointer;display:inline-flex">
+                  <span data-i18n="step.resume.select_btn">📄 选择文件</span>
+                  <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
                 </label>
                 <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)" data-i18n="step.resume.not_uploaded">尚未上传</span>
               </div>
               <div id="resumeInfo" style="display:none;margin-top:4px">
                 <span style="font-size:12px;color:var(--ink-3)">已上传：</span>
                 <span id="resumeName" style="font-size:12px;font-weight:500;color:var(--ink)"></span>
-                <button class="btn btn-sm btn-outline" style="margin-left:8px;padding:2px 10px" onclick="deleteResume()" data-i18n="step.resume.delete_btn">删除</button>
+                <button class="btn btn-sm btn-outline resume-delete-btn" style="margin-left:8px;padding:2px 10px" data-i18n="step.resume.delete_btn">删除</button>
               </div>
             </div>
           </div>
 
-          <!-- 步骤 04 — 面试方向 -->
           <div class="setup-section">
             <div class="num">04</div>
             <div class="body">
@@ -132,51 +171,62 @@
           </div>
 
           <div class="cta-row">
-            <button class="btn" onclick="startInterview()" id="startBtn" data-i18n="btn.start">开始面试 →</button>
+            <button class="btn" id="startBtn" data-i18n="btn.start">开始面试 →</button>
             <span style="font-size:12.5px;color:var(--ink-4)" data-i18n="btn.shortcut">回车键发送回答 · 支持语音输入</span>
           </div>
-
         </div>
-        <!-- /welcomeScreen -->
-
-      </div>
-      <!-- /messages -->
-
-      <!-- 聊天状态栏 -->
-      <div class="chat-status" id="chatStatus" style="display:none">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">就绪</span>
       </div>
 
-      <!-- 底部输入区 -->
-      <div class="input-area" id="inputArea" style="display:none">
-        <div class="input-wrapper">
-          <textarea id="messageInput" rows="1" placeholder="" disabled></textarea>
-          <div style="display:flex;align-items:center;flex-shrink:0">
-            <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="语音输入" disabled>🎤</button>
+      <!-- 面试进行中 -->
+      <div id="interviewActive" style="display:none">
+        <div class="messages" id="interviewMessages"></div>
+        <div class="chat-status" id="chatStatus">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">就绪</span>
+        </div>
+        <div class="input-area" id="interviewInputArea">
+          <div class="input-wrapper">
+            <textarea id="messageInput" rows="1" placeholder="" disabled></textarea>
+            <button class="mic-btn" id="micBtn" title="语音输入" disabled>🎤</button>
+            <button class="send-btn" id="sendBtn" disabled data-i18n="btn.send">发送</button>
           </div>
-          <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()" data-i18n="btn.send">发送</button>
+        </div>
+        <div style="text-align:center;padding:16px">
+          <button class="btn btn-outline" id="endBtn" data-i18n="btn.end_interview">结束面试</button>
         </div>
       </div>
-
     </div>
-  </div>
 
-  </div>
+    <!-- ── View 3: 历史记录 ── -->
+    <div class="view-container" id="view-history" style="display:none">
+      <div class="chat-header">
+        <h2 data-i18n="history.title">面试历史</h2>
+      </div>
+      <div class="messages">
+        <!-- 列表视图 -->
+        <div id="historyList"></div>
+        <!-- 详情视图 -->
+        <div id="historyDetail" style="display:none"></div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #0：语言选择（Language Selector）      -->
+<!-- 弹窗 #0：语言选择                        -->
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="langModal">
   <div class="modal" style="max-width:420px;text-align:center">
     <h2 style="font-size:28px;margin-bottom:12px">👋 Welcome!</h2>
     <p style="font-size:15px;color:var(--ink-3);margin-bottom:28px" id="langPrompt">请选择语言 / Select your language</p>
     <div style="display:flex;gap:12px;">
-      <button class="btn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer" onclick="setLanguage('zh')">
+      <button class="btn" id="langZhBtn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer">
         🇨🇳 中文
       </button>
-      <button class="btn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer" onclick="setLanguage('en')">
+      <button class="btn" id="langEnBtn" style="flex:1;padding:16px 24px;font-size:18px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:14px;cursor:pointer">
         🇺🇸 English
       </button>
     </div>
@@ -184,67 +234,75 @@
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #1：首次引导（Onboarding）            -->
+<!-- 弹窗 #1：面试反馈报告                    -->
 <!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="onboardingModal">
+<div class="modal-overlay" id="feedbackModal">
   <div class="modal">
-    <h2 data-i18n="onboard.title">欢迎使用 Interview Mate</h2>
-    <p style="margin-bottom:24px" data-i18n="onboard.desc" data-i18n-html="true">
-      是否有相关的项目背景文件？例如「金融硕士项目」「管科博士项目」等。
-      <br/>上传后，面试官将根据你的项目背景进行针对性提问。
-    </p>
-    <div class="form-group">
-      <label data-i18n="onboard.upload_label">上传项目背景文件（PDF / TXT）</label>
-      <input type="file" id="onboardingFileInput" accept=".pdf,.txt,.md" onchange="handleOnboardingFile(event)" />
-      <div id="onboardingFileInfo" style="display:none;margin-top:10px">
-        <div class="file-info">
-          <span id="onboardingFileName"></span>
-          <button class="remove-file" onclick="clearOnboardingFile()" data-i18n="step.resume.delete_btn">移除</button>
-        </div>
-      </div>
-      <div class="skip-hint" data-i18n="onboard.skip_hint">💡 也可以跳过，稍后在 ⚙️ 设置中上传</div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-outline" onclick="skipOnboarding()" data-i18n="onboard.skip">暂时跳过</button>
-      <button class="btn btn-primary" onclick="confirmOnboarding()" id="onboardingConfirmBtn" data-i18n="onboard.confirm">确认并开始使用</button>
+    <h2 data-i18n="feedback.title">面试评估报告</h2>
+    <div class="feedback-content" id="feedbackContent" data-i18n="feedback.loading">加载中...</div>
+    <div style="display:flex;gap:10px;margin-top:28px">
+      <button class="btn btn-outline" style="flex:1;justify-content:center" id="downloadSummaryBtn" data-i18n="feedback.download">📥 下载面试总结</button>
+      <button class="btn feedback-close-btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" data-i18n="feedback.close">关闭并回到首页</button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #2：设置（Settings）                  -->
+<!-- 弹窗 #2：报告生成中                      -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="loadingModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">⏳</div>
+    <h2 style="margin-bottom:8px" data-i18n="loading.title">报告生成中...</h2>
+    <p style="font-size:14px;color:var(--ink-3)" data-i18n="loading.desc">正在分析你的面试表现，请稍候</p>
+    <div class="spinner" style="margin:24px auto 0;width:24px;height:24px;border-width:3px"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #3：导师详情                        -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="personaDetailModal">
+  <div class="modal">
+    <h2 data-i18n="detail.title">导师画像</h2>
+    <div id="personaDetailContent">
+      <div style="text-align:center;padding:40px;color:var(--ink-3)" data-i18n="detail.loading">加载中...</div>
+    </div>
+    <button class="btn close-btn" id="personaDetailCloseBtn" data-i18n="detail.close">关闭</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #4：设置（背景文件 + 简历）         -->
 <!-- ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <h2 data-i18n="settings.title">⚙️ 设置</h2>
 
-    <!-- 项目背景文件 -->
     <div class="form-group">
       <label data-i18n="settings.bg_file">项目背景文件</label>
       <div id="settingsBgInfo">
         <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.bg_none">未上传背景文件</div>
       </div>
       <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-        <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" onchange="handleSettingsFile(event)" />
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsFileInput').click()" data-i18n="settings.bg_upload">上传文件</button>
-        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteBackgroundFile()" id="settingsDeleteBg" style="display:none" data-i18n="settings.bg_delete">删除文件</button>
+        <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsBgUploadBtn" data-i18n="settings.bg_upload">上传文件</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteBg" style="display:none" data-i18n="settings.bg_delete">删除文件</button>
       </div>
     </div>
 
-    <!-- 个人简历 -->
     <div class="form-group">
       <label data-i18n="settings.resume">个人简历</label>
       <div id="settingsResumeInfo">
         <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.resume_none">未上传简历</div>
       </div>
       <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-        <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" onchange="handleSettingsResume(event)" />
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('settingsResumeInput').click()" data-i18n="settings.resume_upload">上传简历</button>
-        <button class="btn btn-outline btn-sm delete-btn" onclick="deleteSettingsResume()" id="settingsDeleteResume" style="display:none" data-i18n="settings.resume_delete">删除简历</button>
+        <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteResume" style="display:none" data-i18n="settings.resume_delete">删除简历</button>
       </div>
     </div>
 
-    <!-- 当前面试官 -->
     <div class="form-group">
       <label data-i18n="settings.persona">当前面试官</label>
       <div id="settingsPersonaInfo" style="font-size:13px;color:var(--ink-3);padding:6px 0">
@@ -253,1116 +311,60 @@
     </div>
 
     <div class="form-actions">
-      <button class="btn btn" onclick="closeSettings()" data-i18n="settings.close">关闭</button>
+      <button class="btn" id="settingsCloseBtn" data-i18n="settings.close">关闭</button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #3：面试反馈报告                      -->
+<!-- 弹窗 #5：用户资料编辑                    -->
 <!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="feedbackModal">
-  <div class="modal">
-    <h2 data-i18n="feedback.title">面试评估报告</h2>
-    <div class="feedback-content" id="feedbackContent" data-i18n="feedback.loading">加载中...</div>
-    <div style="display:flex;gap:10px;margin-top:28px">
-      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="downloadSummary()" id="downloadSummaryBtn" data-i18n="feedback.download">📥 下载面试总结</button>
-      <button class="btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" onclick="closeFeedback()" data-i18n="feedback.close">关闭并回到首页</button>
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:440px">
+    <h2 data-i18n="profile.title">编辑资料</h2>
+    <div class="form-group">
+      <label data-i18n="profile.name_label">你的名字</label>
+      <input type="text" id="profileNameInput" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-top:4px" />
     </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #4：导师详情                          -->
-<!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="personaDetailModal">
-  <div class="modal">
-    <h2 data-i18n="detail.title">导师画像</h2>
-    <div id="personaDetailContent">
-      <div style="text-align:center;padding:40px;color:var(--ink-3)" data-i18n="detail.loading">加载中...</div>
-    </div>
-    <button class="btn close-btn" onclick="closePersonaDetail()" data-i18n="detail.close">关闭</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- 弹窗 #5：报告生成中                       -->
-<!-- ══════════════════════════════════════════ -->
-<div class="modal-overlay" id="loadingModal">
-  <div class="modal" style="max-width:400px;text-align:center">
-    <div <script>
-// ══════════════════════════════════════════════════
-// 状态管理
-// ══════════════════════════════════════════════════
-
-const API = window.API;  // from js/shared/config.js
-
-// state now in js/shared/state.js (accessed via window.state)
-const state = window.state;
-
-// ══════════════════════════════════════════════════
-// 🌐 国际化（i18n）
-// ══════════════════════════════════════════════════
-
-// i18n now in js/shared/i18n.js (accessed via window._lang, window.t, etc.)
-// storage functions now in js/shared/storage.js (accessed via window.getStorage etc.)
-// ══════════════════════════════════════════════════
-// 初始化
-// ══════════════════════════════════════════════════
-
-async function init() {
-  // 先应用语言（设置 data-i18n 初始值）
-  applyLanguage();
-
-  await loadPersonas();
-  setupEventListeners();
-  setupSpeechInput();
-  await loadResumeStatus();
-
-  // 读取 localStorage 状态
-  const hasOnboarded = getStorage('hasOnboarded', false);
-  const lastPersonaId = getStorage('lastPersonaId', null);
-
-  // 显示语言选择弹窗，选完后继续
-  const langChosen = getStorage('langChosen', false);
-  if (!langChosen) {
-    setTimeout(() => {
-      document.getElementById('langModal').classList.add('show');
-    }, 300);
-    return;
-  }
-
-  // 如果尚未完成引导，显示引导弹窗
-  if (!hasOnboarded) {
-    setTimeout(() => openOnboarding(), 500);
-    return;
-  }
-
-  // 如果已经完成引导且有上次面试记录，自动进入面试界面
-  if (hasOnboarded && lastPersonaId) {
-    // 尝试恢复上次的面试官选择和方向
-    const lastField = getStorage('lastField', null);
-    state.personaId = lastPersonaId;
-
-    // 选中对应的面试官卡片
-    setTimeout(() => {
-      const cards = document.querySelectorAll('.persona-card');
-      let found = false;
-      cards.forEach(c => {
-        if (c.dataset.id === lastPersonaId) {
-          selectPersona(lastPersonaId, c);
-          found = true;
-        }
-      });
-      // 如果没找到（可能已被删除），选中第一个
-      if (!found) {
-        const first = cards[0];
-        if (first) selectPersona(first.dataset.id, first);
-      }
-
-      // 恢复方向选择
-      if (lastField) {
-        const fieldSelect = document.getElementById('fieldSelect');
-        const options = fieldSelect.options;
-        let fieldFound = false;
-        for (let i = 0; i < options.length; i++) {
-          if (options[i].value === lastField) {
-            fieldSelect.selectedIndex = i;
-            fieldFound = true;
-            break;
-          }
-        }
-        if (!fieldFound && lastField) {
-          // 自定义方向
-          fieldSelect.value = '其他（请自定义）';
-          document.getElementById('customField').value = lastField;
-        }
-        fieldSelect.dispatchEvent(new Event('change'));
-      }
-
-      // 只恢复选择，不自动开始——等用户点击「开始面试」按钮
-    }, 200);
-  }
-}
-
-// ══════════════════════════════════════════════════
-// 面试官加载与渲染
-// ══════════════════════════════════════════════════
-
-async function loadPersonas() {
-  try {
-    const res = await fetch(`${API}/api/personas?language=${getLanguage()}`);
-    const data = await res.json();
-    renderPersonas(data.personas);
-  } catch(e) {
-    console.error('加载面试官列表失败', e);
-    // 兜底数据（使用 t() 函数以支持语言切换）
-    renderPersonas({
-      strict: { id:'strict', name: getLanguage() === 'en' ? 'Strict' : '严厉型', description: getLanguage() === 'en' ? 'Demanding and detail-oriented, not easily impressed' : '要求严格，喜欢追问细节', type:'general', avatar_emoji:'😤' },
-      gentle: { id:'gentle', name: getLanguage() === 'en' ? 'Gentle' : '温和型', description: getLanguage() === 'en' ? 'Encouraging and supportive, offers hints when stuck' : '鼓励式引导，会给出提示', type:'general', avatar_emoji:'😊' },
-      probing: { id:'probing', name: getLanguage() === 'en' ? 'Probing' : '追问型', description: getLanguage() === 'en' ? 'Follow-up questions drill deep into knowledge' : '层层深入，测试知识深度', type:'general', avatar_emoji:'🔍' },
-      socratic: { id:'socratic', name: getLanguage() === 'en' ? 'Socratic' : '苏格拉底型', description: getLanguage() === 'en' ? 'Uses counter-questions to guide self-discovery' : '通过反问引导思考', type:'general', avatar_emoji:'🧠' }
-    });
-  }
-}
-
-function renderPersonas(personas) {
-  const container = document.getElementById('personaList');
-  container.innerHTML = '';
-
-  // 分组：通用 + 提取的
-  const general = [];
-  const extracted = [];
-  Object.values(personas).forEach(p => {
-    if (p.type === 'extracted') extracted.push(p);
-    else general.push(p);
-  });
-
-  // 通用面试官
-  if (general.length) {
-    const divider = document.createElement('div');
-    divider.className = 'section-divider';
-    divider.textContent = t('persona.general');
-    container.appendChild(divider);
-    general.forEach(p => container.appendChild(createPersonaCard(p, false)));
-  }
-
-  // 已提取的导师
-  if (extracted.length) {
-    const divider = document.createElement('div');
-    divider.className = 'section-divider';
-    divider.textContent = t('persona.extracted');
-    container.appendChild(divider);
-    extracted.forEach(p => container.appendChild(createPersonaCard(p, true)));
-  }
-
-  // 默认选中第一个
-  const first = container.querySelector('.persona-card');
-  if (first) selectPersona(first.dataset.id, first);
-}
-
-function createPersonaCard(p, isExtracted) {
-  const card = document.createElement('div');
-  card.className = 'persona-card';
-  card.dataset.id = p.id;
-  card.dataset.type = isExtracted ? 'extracted' : 'general';
-  card.dataset.researchAreas = isExtracted ? JSON.stringify(p.research_areas || []) : '[]';
-  card.innerHTML = `
-    <div class="emoji">${p.avatar_emoji || '🎭'}</div>
-    <div class="info">
-      <div class="name">${p.name}</div>
-      <div class="desc">${p.description || ''}</div>
-      ${isExtracted
-        ? `<div class="tag">🎓 ${(p.research_areas||[]).join(' · ')}</div>`
-        : `<span class="tag">${t('persona.general_tag')}</span>`
-      }
-    </div>
-    ${isExtracted ? `
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button class="btn btn-sm btn-outline" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();viewPersonaDetail('${p.id}')">📋</button>
-        <button class="btn btn-sm btn-outline" style="padding:4px 8px;font-size:11px;color:var(--strict);border-color:#fecaca" onclick="event.stopPropagation();deletePersona('${p.id}', '${p.name}')">🗑️</button>
+    <div class="form-group">
+      <label data-i18n="profile.resume_label">简历</label>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="profileResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="profileResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
+        <span id="profileResumeStatus" style="font-size:13px;color:var(--ink-3)" data-i18n="settings.resume_none">未上传简历</span>
       </div>
-    ` : ''}
-  `;
-  card.onclick = () => selectPersona(p.id, card);
-  return card;
-}
-function selectPersona(id, el) {
-  document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
-  state.personaId = id;
-  state.personaName = el ? el.querySelector('.name').textContent : id;
-
-  // 处理面试方向下拉：如果是已蒸馏的导师，显示并自动选中"该教授自身专业"
-  const fieldSelect = document.getElementById('fieldSelect');
-  const profOption = fieldSelect.querySelector('option[value="__professor_field__"]');
-  const isExtracted = el && el.dataset.type === 'extracted';
-
-  if (isExtracted && profOption) {
-    profOption.style.display = 'block';
-    try {
-      state.currentResearchAreas = JSON.parse(el.dataset.researchAreas || '[]');
-    } catch(e) {
-      state.currentResearchAreas = [];
-    }
-    fieldSelect.value = '__professor_field__';
-  } else if (profOption) {
-    profOption.style.display = 'none';
-    state.currentResearchAreas = [];
-    if (fieldSelect.value === '__professor_field__') {
-      fieldSelect.selectedIndex = 1;
-    }
-  }
-
-  fieldSelect.dispatchEvent(new Event('change'));
-}
-
-function setupEventListeners() {
-  const fieldSelect = document.getElementById('fieldSelect');
-  const customField = document.getElementById('customField');
-  fieldSelect.addEventListener('change', () => {
-    customField.style.display = fieldSelect.value === '其他（请自定义）' ? 'block' : 'none';
-    if (fieldSelect.value === '__professor_field__') {
-      customField.style.display = 'none';
-    }
-  });
-
-  // 回车发送
-  document.getElementById('messageInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-}
-
-// ══════════════════════════════════════════════════
-// Persona Extraction (导师蒸馏)
-// ══════════════════════════════════════════════════
-
-async function extractPersona() {
-  const name = document.getElementById('extractName').value.trim();
-  const affiliation = document.getElementById('extractAffil').value.trim();
-  if (!name) { showToast(t('extract.no_name'), 'error'); return; }
-
-  const btn = document.getElementById('extractBtn');
-  btn.disabled = true;
-  btn.textContent = t('extract.loading');
-
-  try {
-    const res = await fetch(`${API}/api/personas/extract`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, affiliation, language: getLanguage() })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || t('extract.fail'));
-    const p = data.persona;
-    state.extractedPersonas[p.id] = p;
-
-    showToast(t('extract.success', { name: p.name }), 'success');
-    await loadPersonas();
-    state.extractedPersonas[p.id] = p;
-
-    alert(t('extract.alert', { name: p.name }));
-    await loadPersonas();
-
-    // 选中刚提取的
-    setTimeout(() => {
-      const cards = document.querySelectorAll('.persona-card');
-      cards.forEach(c => {
-        if (c.dataset.id === p.id) selectPersona(p.id, c);
-      });
-    }, 100);
-  } catch(e) {
-    showToast(t('extract.fail') + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = t('step.extract.btn');
-  }
-}
-
-// ══════════════════════════════════════════════════
-// Persona 详情
-// ══════════════════════════════════════════════════
-
-async function viewPersonaDetail(id) {
-  const modal = document.getElementById('personaDetailModal');
-  const content = document.getElementById('personaDetailContent');
-  content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-3)">⏳ ' + t('detail.loading') + '</div>';
-  modal.classList.add('show');
-
-  try {
-    let p = state.extractedPersonas[id];
-    if (!p) {
-      const res = await fetch(`${API}/api/personas/${id}?language=${getLanguage()}`);
-      const data = await res.json();
-      p = data.persona;
-    }
-
-    content.innerHTML = `
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)">
-        <div style="font-size:48px">🎓</div>
-        <div>
-          <div style="font-size:20px;font-weight:700">${p.name}</div>
-          <div style="color:var(--ink-3);font-size:14px">${p.title || t('detail.professor')} ${t('detail.at')} ${p.affiliation}</div>
-        </div>
-      </div>
-
-      <table style="width:100%;border-collapse:collapse">
-        <tr>
-          <td style="padding:10px 12px;font-weight:600;width:100px;vertical-align:top;color:var(--ink-3)">${t('detail.research_areas')}</td>
-          <td style="padding:10px 12px">${(p.research_areas || []).map(r => `<span style="display:inline-block;background:var(--paper);border:1px solid var(--line);padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:var(--ink-2)">${r}</span>`).join('')}</td>
-        </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
-        <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.research_style')}</td>
-          <td style="padding:10px 12px;color:var(--ink-2)">${p.research_style || t('detail.analyzing')}</td>
-        </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
-        <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.teaching_style')}</td>
-          <td style="padding:10px 12px;color:var(--ink-2)">${p.teaching_style || t('detail.analyzing')}</td>
-        </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
-        <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.traits')}</td>
-          <td style="padding:10px 12px">${(p.personality_traits || []).map(t => `<span style="display:inline-block;background:#FEF3C7;border:1px solid #FDE68A;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;font-size:13px;color:#92400E">${t}</span>`).join('')}</td>
-        </tr>
-        <tr><td colspan="2" style="border-bottom:1px solid var(--line)"></td></tr>
-        <tr>
-          <td style="padding:10px 12px;font-weight:600;vertical-align:top;color:var(--ink-3)">${t('detail.questions')}</td>
-          <td style="padding:10px 12px">
-            <ol style="margin:0;padding-left:20px;font-size:13px">
-              ${(p.typical_questions || []).map(q => `<li style="margin-bottom:4px;color:var(--ink-2)">${q}</li>`).join('')}
-            </ol>
-          </td>
-        </tr>
-      </table>
-
-      <details style="margin-top:20px">
-        <summary style="cursor:pointer;font-size:13px;color:var(--ink-4)">${t('detail.llm_prompt')}</summary>
-        <pre style="background:var(--paper);padding:12px;border-radius:8px;font-size:12px;margin-top:8px;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)">${(p.style_prompt || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-      </details>
-    `;
-  } catch(e) {
-    content.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">${t('detail.load_fail')}${e.message}</div>`;
-  }
-}
-
-function closePersonaDetail() {
-  document.getElementById('personaDetailModal').classList.remove('show');
-}
-
-// ══════════════════════════════════════════════════
-// 个人简历上传
-// ══════════════════════════════════════════════════
-
-function handleResumeFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  uploadResume(file);
-}
-
-async function uploadResume(file) {
-  const status = document.getElementById('resumeStatus');
-  status.textContent = '⏳ 上传中...';
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const res = await fetch(`${API}/api/resume/upload`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '上传失败');
-    }
-    const data = await res.json();
-
-    document.getElementById('resumeStatus').textContent = getLanguage() === 'en' ? '✅ Uploaded' : '✅ 已上传';
-    document.getElementById('resumeName').textContent = data.filename;
-    document.getElementById('resumeInfo').style.display = '';
-    showToast(t('toast.resume_success'), 'success');
-  } catch (e) {
-    document.getElementById('resumeStatus').textContent = '❌ ' + (getLanguage() === 'en' ? 'Upload failed' : '上传失败');
-    showToast(t('toast.upload_fail') + e.message, 'error');
-  }
-}
-
-async function deleteResume() {
-  try {
-    const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(t('toast.resume_delete_fail'));
-    document.getElementById('resumeStatus').textContent = t('step.resume.not_uploaded');
-    document.getElementById('resumeInfo').style.display = 'none';
-    document.getElementById('resumeFileInput').value = '';
-    showToast(t('settings.resume_deleted'), 'success');
-  } catch (e) {
-    showToast(t('toast.delete_fail') + e.message, 'error');
-  }
-}
-
-async function loadResumeStatus() {
-  try {
-    const res = await fetch(`${API}/api/resume`);
-    const data = await res.json();
-    if (data.has_resume) {
-      document.getElementById('resumeStatus').textContent = '✅ 已上传';
-      document.getElementById('resumeName').textContent = data.filename;
-      document.getElementById('resumeInfo').style.display = '';
-    }
-  } catch (e) {
-    // 忽略
-  }
-}
-
-// ══════════════════════════════════════════════════
-// 删除导师
-// ══════════════════════════════════════════════════
-
-async function deletePersona(id, name) {
-  if (!confirm(t('confirm.delete_persona', { name }))) return;
-  try {
-    const res = await fetch(`${API}/api/personas/${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.detail || t('toast.delete_fail'));
-    }
-    showToast(t('confirm.delete_persona_done', { name }), 'success');
-    await loadPersonas();
-    if (state.personaId === id) {
-      state.personaId = null;
-      const firstCard = document.querySelector('.persona-card');
-      if (firstCard) selectPersona(firstCard.dataset.id, firstCard);
-    }
-  } catch(e) {
-    showToast('❌ 删除失败: ' + e.message, 'error');
-  }
-}
-
-// toast now in js/shared/toast.js (accessed via window.showToast)
-
-
-// ══════════════════════════════════════════════════
-// 首次引导弹窗（Onboarding）
-// ══════════════════════════════════════════════════
-
-function openOnboarding() {
-  document.getElementById('onboardingModal').classList.add('show');
-}
-
-function closeOnboarding() {
-  document.getElementById('onboardingModal').classList.remove('show');
-}
-
-/**
- * 处理引导弹窗中的文件选择
- */
-function handleOnboardingFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  state.backgroundFile = file;
-  document.getElementById('onboardingFileName').textContent = '📄 ' + file.name;
-  document.getElementById('onboardingFileInfo').style.display = 'block';
-}
-
-function clearOnboardingFile() {
-  state.backgroundFile = null;
-  document.getElementById('onboardingFileInput').value = '';
-  document.getElementById('onboardingFileInfo').style.display = 'none';
-}
-
-/**
- * 跳过引导
- */
-function skipOnboarding() {
-  // 标记已引导
-  setStorage('hasOnboarded', true);
-  closeOnboarding();
-  showToast(t('onboard.skipped'), 'success');
-}
-
-/**
- * 确认引导（可能上传文件或跳过）
- */
-async function confirmOnboarding() {
-  // 如果有选文件，上传到后端
-  if (state.backgroundFile) {
-    try {
-      const formData = new FormData();
-      formData.append('file', state.backgroundFile);
-      const res = await fetch(`${API}/api/background/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || t('toast.upload_fail'));
-      }
-      const data = await res.json();
-      state.backgroundFileName = data.filename;
-      showToast(t('onboard.uploaded') + data.filename, 'success');
-    } catch(e) {
-      showToast(t('toast.upload_fail') + e.message, 'error');
-    }
-  }
-
-  // 标记已引导
-  setStorage('hasOnboarded', true);
-  closeOnboarding();
-}
-
-// ══════════════════════════════════════════════════
-// 设置弹窗
-// ══════════════════════════════════════════════════
-
-function openSettings() {
-  // 刷新背景文件信息
-  updateSettingsUI();
-  document.getElementById('settingsModal').classList.add('show');
-}
-
-function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('show');
-}
-
-/**
- * 更新设置弹窗中的信息
- */
-async function updateSettingsUI() {
-  // 1. 背景文件信息
-  try {
-    const res = await fetch(`${API}/api/background`);
-    const data = await res.json();
-    const bgInfo = document.getElementById('settingsBgInfo');
-    const deleteBtn = document.getElementById('settingsDeleteBg');
-
-    if (data.has_background) {
-      bgInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} 字符)</span></div>`;
-      deleteBtn.style.display = 'inline-block';
-    } else {
-      bgInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.bg_none') + '</div>';
-      deleteBtn.style.display = 'none';
-    }
-  } catch(e) {
-    document.getElementById('settingsBgInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.query_fail') + '</div>';
-  }
-
-  // 2. 面试官信息
-  const personaInfo = document.getElementById('settingsPersonaInfo');
-  if (state.personaId) {
-    const activeCard = document.querySelector('.persona-card.active');
-    if (activeCard) {
-      const name = activeCard.querySelector('.name').textContent;
-      personaInfo.innerHTML = `<span class="bg-badge">${name}</span>`;
-    } else {
-      personaInfo.innerHTML = `<span style="font-size:13px;color:var(--ink-3)">${state.personaId}</span>`;
-    }
-  } else {
-    personaInfo.innerHTML = '<span style="font-size:13px;color:var(--ink-4)">' + t('settings.persona_none') + '</span>';
-  }
-
-  // 3. 简历信息
-  try {
-    const res = await fetch(`${API}/api/resume`);
-    const data = await res.json();
-    const resumeInfo = document.getElementById('settingsResumeInfo');
-    const deleteBtn = document.getElementById('settingsDeleteResume');
-
-    if (data.has_resume) {
-      resumeInfo.innerHTML = `<div class="file-info"><span>📄 ${data.filename}</span><span style="color:var(--ink-4);font-size:12px">(${data.text_length} ${getLanguage() === 'en' ? 'chars' : '字符'})</span></div>`;
-      deleteBtn.style.display = 'inline-block';
-    } else {
-      resumeInfo.innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.resume_none') + '</div>';
-      deleteBtn.style.display = 'none';
-    }
-  } catch(e) {
-    document.getElementById('settingsResumeInfo').innerHTML = '<div style="font-size:13px;color:var(--ink-4);padding:10px 0">' + t('settings.query_fail') + '</div>';
-  }
-}
-
-/**
- * 处理设置弹窗中的文件选择
- */
-async function handleSettingsFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const res = await fetch(`${API}/api/background/upload`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '上传失败');
-    }
-    const data = await res.json();
-    state.backgroundFileName = data.filename;
-    showToast(t('settings.bg_success') + data.filename, 'success');
-    updateSettingsUI();
-  } catch(e) {
-    showToast(t('toast.upload_fail') + e.message, 'error');
-  }
-
-  event.target.value = ''; // 重置 input
-}
-
-/**
- * 删除背景文件
- */
-async function deleteBackgroundFile() {
-  if (!confirm(t('settings.bg_confirm_delete'))) return;
-  try {
-    const res = await fetch(`${API}/api/background`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(t('toast.delete_fail'));
-    state.backgroundFileName = null;
-    showToast(t('settings.bg_deleted'), 'success');
-    updateSettingsUI();
-  } catch(e) {
-    showToast(t('toast.delete_fail') + e.message, 'error');
-  }
-}
-
-// ── 设置弹窗：简历操作 ──────────────────────────
-
-async function handleSettingsResume(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const res = await fetch(`${API}/api/resume/upload`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || t('toast.upload_fail'));
-    }
-    showToast(t('settings.resume_success'), 'success');
-    updateSettingsUI();
-  } catch (e) {
-    showToast(t('toast.upload_fail') + e.message, 'error');
-  }
-}
-
-async function deleteSettingsResume() {
-  if (!confirm(t('settings.resume_confirm_delete'))) return;
-  try {
-    const res = await fetch(`${API}/api/resume`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(t('toast.resume_delete_fail'));
-    showToast(t('settings.resume_deleted'), 'success');
-    updateSettingsUI();
-  } catch(e) {
-    showToast(t('toast.delete_fail') + e.message, 'error');
-  }
-}
-
-// ══════════════════════════════════════════════════
-// 面试流程
-// ══════════════════════════════════════════════════
-
-async function startInterview() {
-  if (!state.personaId) { alert(t('error.select_persona')); return; }
-
-  const fieldSelect = document.getElementById('fieldSelect');
-  const customField = document.getElementById('customField');
-  
-  if (fieldSelect.value === '__professor_field__') {
-    state.field = state.currentResearchAreas.length > 0
-      ? state.currentResearchAreas.join(' / ')
-      : '人工智能';
-  } else {
-    state.field = fieldSelect.value === '其他（请自定义）' ? customField.value.trim() : fieldSelect.value;
-  }
-  if (!state.field) { alert(t('error.select_field')); return; }
-
-  // 保存到 localStorage（用于下次自动恢复）
-  setStorage('lastPersonaId', state.personaId);
-  setStorage('lastField', state.field);
-
-  const btn = document.getElementById('startBtn');
-  btn.disabled = true;
-  btn.textContent = t('btn.wait_connect');
-
-  try {
-    // 构建请求体，如果有背景文件则携带 content
-    const body = {
-      persona_id: state.personaId,
-      field: state.field,
-      language: getLanguage()
-    };
-
-    // 从后端获取背景文件内容
-    try {
-      const bgRes = await fetch(`${API}/api/background`);
-      const bgData = await bgRes.json();
-      if (bgData.has_background) {
-        // 后端会在 start_interview 中自动读取，所以这里不需要传 background 字段
-        // 但为了显式控制，也尝试传入
-      }
-    } catch(e) {}
-
-    const res = await fetch(`${API}/api/interview/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    if (data.error) { throw new Error(data.error); }
-
-    state.sessionId = data.session_id;
-    state.isInterviewing = true;
-
-    // 切换 UI
-    document.getElementById('welcomeScreen').style.display = 'none';
-    document.getElementById('chatStatus').style.display = 'flex';
-    document.getElementById('inputArea').style.display = 'flex';
-    document.getElementById('endBtn').style.display = 'inline-block';
-    document.getElementById('startBtn').textContent = t('btn.new_interview');
-
-    updateStatus(t('status.interviewing'), 'dot');
-
-    setInputEnabled(true);
-    document.getElementById('messageInput').focus();
-
-    // 显示第一个问题
-    addMessage('interviewer', data.question);
-  } catch(e) {
-    alert(t('error.start_fail') + e.message);
-  } finally {
-    btn.disabled = false;
-    if (!state.isInterviewing) btn.textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
-  }
-}
-
-async function sendMessage() {
-  const input = document.getElementById('messageInput');
-  const text = input.value.trim();
-  if (!text || !state.sessionId) return;
-
-  input.value = '';
-  addMessage('candidate', text);
-
-  // 禁用输入
-  setInputEnabled(false);
-  updateStatus(t('status.thinking'), 'pending');
-
-  try {
-    const res = await fetch(`${API}/api/interview/respond`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: state.sessionId, message: text })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    addMessage('interviewer', data.question);
-    updateStatus(t('status.interviewing'), 'dot');
-  } catch(e) {
-    addMessage('interviewer', `${t('msg.error_prefix')}${e.message}${t('msg.error_retry')}`);
-  } finally {
-    setInputEnabled(true);
-    input.focus();
-  }
-}
-
-async function endInterview() {
-  if (!state.sessionId) return;
-  if (!confirm(t('confirm.end_interview'))) return;
-
-  setInputEnabled(false);
-  updateStatus(t('status.generating'), 'pending');
-
-  // 显示加载弹窗
-  document.getElementById('loadingModal').classList.add('show');
-
-  try {
-    const res = await fetch(`${API}/api/interview/end`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: state.sessionId })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    // 隐藏加载弹窗，显示反馈弹窗
-    document.getElementById('loadingModal').classList.remove('show');
-    showFeedback(data.feedback);
-    goToWelcomeScreen();
-  } catch(e) {
-    document.getElementById('loadingModal').classList.remove('show');
-    alert(t('error.generating') + e.message);
-    goToWelcomeScreen();
-  }
-
-  state.isInterviewing = false;
-  state.sessionId = null;
-  document.getElementById('endBtn').style.display = 'none';
-  document.getElementById('inputArea').style.display = 'none';
-  document.getElementById('chatStatus').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
-}
-
-/**
- * 从面试界面回到欢迎页（点击 logo）
- */
-function returnToSetup() {
-  if (!state.isInterviewing) return;
-
-  if (!confirm(t('confirm.exit_interview'))) return;
-
-  state.isInterviewing = false;
-  // 不清除 sessionId，这样数据还在，但用户回到欢迎页
-  document.getElementById('welcomeScreen').style.display = '';
-  document.getElementById('chatStatus').style.display = 'none';
-  document.getElementById('inputArea').style.display = 'none';
-  document.getElementById('endBtn').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
-
-  // 清空消息列表（保留欢迎页）
-  const messages = document.getElementById('messages');
-  const welcome = document.getElementById('welcomeScreen');
-  // 只清除 welcome 之外的消息
-  Array.from(messages.children).forEach(child => {
-    if (child !== welcome && child.id !== 'welcomeScreen') {
-      child.remove();
-    }
-  });
-  welcome.style.display = '';
-}
-
-// ══════════════════════════════════════════════════
-// UI 辅助函数
-// ══════════════════════════════════════════════════
-
-function addMessage(role, text) {
-  const container = document.getElementById('messages');
-  const msg = document.createElement('div');
-  msg.className = `message ${role}`;
-
-  const base = role === 'interviewer' ? (state.personaName ? t('msg.interviewer_with') + state.personaName : t('msg.interviewer')) : t('msg.you');
-
-  msg.innerHTML = `
-    <div class="bubble">
-      <div class="label">${base}</div>
-      ${text}
     </div>
-  `;
-  container.appendChild(msg);
-  container.scrollTop = container.scrollHeight;
-}
+    <div class="form-actions">
+      <button class="btn btn-outline" id="profileCloseBtn" data-i18n="settings.close">关闭</button>
+      <button class="btn" id="profileSaveBtn" data-i18n="profile.save">保存</button>
+    </div>
+  </div>
+</div>
 
-function setInputEnabled(enabled) {
-  document.getElementById('messageInput').disabled = !enabled;
-  document.getElementById('sendBtn').disabled = !enabled;
-  document.getElementById('micBtn').disabled = !enabled;
-}
-
-function updateStatus(text, dotClass) {
-  document.getElementById('statusText').textContent = text;
-  const dot = document.getElementById('statusDot');
-  dot.className = 'dot' + (dotClass ? ' ' + dotClass : '');
-}
-
-let _lastFeedback = '';  // 缓存最后一份面试反馈，供下载使用
-
-function showFeedback(feedback) {
-  _lastFeedback = feedback;
-  document.getElementById('feedbackContent').textContent = feedback;
-  document.getElementById('feedbackModal').classList.add('show');
-}
-
-function closeFeedback() {
-  document.getElementById('feedbackModal').classList.remove('show');
-  // 关闭弹窗后回到欢迎页
-  goToWelcomeScreen();
-}
-
-function downloadSummary() {
-  if (!_lastFeedback) {
-    showToast(t('feedback.no_data'), 'error');
-    return;
-  }
-
-  // 构建下载内容
-  const now = new Date();
-  const timestamp = now.toLocaleString(getLanguage() === 'en' ? 'en-US' : 'zh-CN', { timeZone: 'Asia/Shanghai' });
-  const content = `${t('download.header')}\n\n` +
-    `${t('download.date')}${timestamp}\n` +
-    `${t('download.interviewer')}${state.personaName || t('download.unknown')}\n` +
-    `${t('download.field')}${state.field || t('download.unknown')}\n` +
-    `${'='.repeat(40)}\n\n` +
-    `${_lastFeedback}`;
-
-  // 生成并下载文件
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const dateStr = now.toISOString().slice(0, 10);
-  a.download = `interview-report-${dateStr}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  showToast(t('toast.downloaded'), 'success');
-}
-
-/**
- * 回到欢迎页，清空聊天消息
- */
-function goToWelcomeScreen() {
-  document.getElementById('welcomeScreen').style.display = '';
-  document.getElementById('chatStatus').style.display = 'none';
-  document.getElementById('inputArea').style.display = 'none';
-  document.getElementById('endBtn').style.display = 'none';
-  document.getElementById('startBtn').textContent = '▶ ' + (getLanguage() === 'en' ? 'Start Interview' : '开始面试');
-
-  // 清空所有聊天消息（保留欢迎页）
-  const messages = document.getElementById('messages');
-  const welcome = document.getElementById('welcomeScreen');
-  Array.from(messages.children).forEach(child => {
-    if (child !== welcome && child.id !== 'welcomeScreen') {
-      child.remove();
-    }
-  });
-  welcome.style.display = '';
-}
-
-// ══════════════════════════════════════════════════
-// 语音输入（STT）
-// ══════════════════════════════════════════════════
-
-let mediaRecorder = null;
-let recordingStream = null;
-let isRecording = false;
-
-function setupSpeechInput() {
-  // Always uses backend Baidu STT API — no mode switching
-  document.getElementById('micBtn').title = getLanguage() === 'en' ? 'Record audio' : '录制语音';
-}
-
-function toggleMic() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-}
-
-async function startRecording() {
-  const micBtn = document.getElementById('micBtn');
-
-  // MediaRecorder → Baidu STT API
-  try {
-    recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm')
-      ? 'audio/webm'
-      : (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : (MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : ''));
-    mediaRecorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : {});
-      const chunks = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        recordingStream.getTracks().forEach(t => t.stop());
-        recordingStream = null;
-
-        if (chunks.length === 0) {
-          micBtn.classList.remove('recording');
-          isRecording = false;
-          return;
-        }
-
-        micBtn.classList.remove('recording');
-        micBtn.classList.add('processing');
-        micBtn.textContent = '⏳';
-        updateStatus(t('status.transcribing'), 'pending');
-
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('file', blob, 'recording.webm');
-
-        try {
-          const res = await fetch(`${API}/api/stt/transcribe`, {
-            method: 'POST',
-            body: formData
-          });
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || '转写失败');
-          }
-          const data = await res.json();
-          const input = document.getElementById('messageInput');
-          input.value = (input.value + data.text).trim();
-          isRecording = false;
-          if (input.value && state.isInterviewing && !document.getElementById('sendBtn').disabled) {
-            sendMessage();
-          }
-        } catch (e) {
-          showToast(t('toast.stt_fail') + e.message, 'error');
-        } finally {
-          micBtn.classList.remove('processing');
-          micBtn.textContent = '🎤';
-          micBtn.title = getLanguage() === 'en' ? 'Voice input' : '语音输入';
-          updateStatus(t('status.interviewing'), 'dot');
-        }
-      };
-
-      isRecording = true;
-      micBtn.textContent = '⏹️';
-      micBtn.classList.add('recording');
-      micBtn.title = getLanguage() === 'en' ? 'Click to stop recording' : '点击停止录音';
-      updateStatus(t('status.backend_recording'), 'pending');
-      mediaRecorder.start();
-    } catch (e) {
-      showToast(t('toast.mic_unavail') + e.message, 'error');
-    }
-}
-
-function stopRecording() {
-  isRecording = false;
-  const micBtn = document.getElementById('micBtn');
-  const input = document.getElementById('messageInput');
-
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-    return;
-  }
-
-  micBtn.textContent = '🎤';
-  micBtn.classList.remove('recording');
-  micBtn.classList.remove('processing');
-  micBtn.title = getLanguage() === 'en' ? 'Voice input' : '语音输入';
-  input.placeholder = t('input.placeholder');
-
-  if (input.value.trim() && state.isInterviewing && !document.getElementById('sendBtn').disabled) {
-    sendMessage();
-  }
-
-  updateStatus(t('status.interviewing'), 'dot');
-}
-
-// ══════════════════════════════════════════════════
-// 启动
-// ══════════════════════════════════════════════════
-
-document.addEventListener('DOMContentLoaded', () => {
-  init();
-});
-</script>sInterviewing && !document.getElementById('sendBtn').disabled) {
-    sendMessage();
-  }
-
-  updateStatus(t('status.interviewing'), 'dot');
-}
-
-// ══════════════════════════════════════════════════
-// 启动
-// ══════════════════════════════════════════════════
-
-document.addEventListener('DOMContentLoaded', () => {
-  init();
-});
-</script>
+<!-- ══════════════════════════════════════════ -->
+<!-- 弹窗 #6：Agent 人格配置                  -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="agentModal">
+  <div class="modal" style="max-width:520px">
+    <h2 data-i18n="agent.title">配置 Main Agent</h2>
+    <div class="form-group">
+      <label data-i18n="agent.preset_label">预设人格</label>
+      <div style="display:flex;gap:8px;margin-top:4px" id="agentPresetBtns">
+        <button class="btn btn-outline btn-sm agent-preset active" data-profile="friendly" data-i18n="agent.preset_friendly">友好陪伴型</button>
+        <button class="btn btn-outline btn-sm agent-preset" data-profile="strict" data-i18n="agent.preset_strict">严格导师型</button>
+        <button class="btn btn-outline btn-sm agent-preset" data-profile="wise" data-i18n="agent.preset_wise">睿智学者型</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="agent.custom_label">自定义 System Prompt（可选）</label>
+      <textarea id="agentCustomPrompt" rows="8" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:monospace;margin-top:4px;resize:vertical"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" id="agentCloseBtn" data-i18n="settings.close">关闭</button>
+      <button class="btn" id="agentSaveBtn" data-i18n="agent.save">保存</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

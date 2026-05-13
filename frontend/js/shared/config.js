@@ -5,4 +5,3 @@ const API_BASE = (window.location.origin.includes('localhost') || window.locatio
   : '';
 
 export { API_BASE };
-window.API = API_BASE;

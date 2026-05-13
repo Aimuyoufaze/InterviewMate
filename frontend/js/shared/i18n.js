@@ -1,4 +1,5 @@
 import { getStorage, setStorage } from './storage.js';
+import { state } from './state.js';
 
 const _lang = {
   zh: {
@@ -150,6 +151,48 @@ const _lang = {
     'error.start_fail': '启动面试失败: ',
     'error.generating': '生成反馈失败: ',
     'lang.switched': '🌐 已切换为中文',
+    // -- 侧边栏 --
+    'nav.chat': '对话',
+    'nav.interview': '模拟面试',
+    'nav.history': '历史记录',
+    'sidebar.settings': '设置',
+    'sidebar.profile': '编辑资料',
+    'sidebar.agent': '配置 Agent',
+    'sidebar.resume_status': '简历：未上传',
+    'sidebar.resume_ok': '简历：已上传',
+    // -- Main Agent 对话 --
+    'chat.placeholder': '和 Interview Mate 聊聊...',
+    'chat.clear': '清空对话',
+    'chat.clear_confirm': '确定清空所有对话吗？',
+    'chat.cleared': '对话已清空',
+    'chat.title': 'Interview Mate',
+    'chat.subtitle': '你的面试备考 AI 陪伴助手',
+    'chat.welcome': '你好！我是 Interview Mate，你的面试备考陪伴助手。我可以帮你制定备考计划、解答面试相关的问题、分析你的回答思路。有什么想聊的？',
+    // -- 历史记录 --
+    'history.title': '面试历史',
+    'history.empty': '还没有面试记录。\n去「模拟面试」开始你的第一次练习吧！',
+    'history.rounds': '轮',
+    'history.view_detail': '查看详情',
+    'history.back': '← 返回列表',
+    'history.delete': '删除',
+    'history.delete_confirm': '确定删除这条面试记录吗？',
+    'history.deleted': '已删除',
+    // -- Agent 配置 --
+    'agent.title': '配置 Main Agent',
+    'agent.preset_label': '预设人格',
+    'agent.custom_label': '自定义 System Prompt（可选）',
+    'agent.preset_friendly': '友好陪伴型',
+    'agent.preset_strict': '严格导师型',
+    'agent.preset_wise': '睿智学者型',
+    'agent.save': '保存',
+    'agent.saved': 'Agent 配置已保存',
+    // -- 用户资料 --
+    'profile.title': '编辑资料',
+    'profile.name_label': '你的名字',
+    'profile.name_placeholder': '让 Agent 知道怎么称呼你',
+    'profile.resume_label': '简历',
+    'profile.save': '保存',
+    'profile.saved': '资料已保存',
   },
   en: {
     'lang.select.prompt': 'Select your language',
@@ -300,6 +343,48 @@ const _lang = {
     'error.start_fail': 'Failed to start interview: ',
     'error.generating': 'Failed to generate feedback: ',
     'lang.switched': '🌐 Switched to English',
+    // -- Sidebar --
+    'nav.chat': 'Chat',
+    'nav.interview': 'Mock Interview',
+    'nav.history': 'History',
+    'sidebar.settings': 'Settings',
+    'sidebar.profile': 'Edit Profile',
+    'sidebar.agent': 'Configure Agent',
+    'sidebar.resume_status': 'Resume: Not uploaded',
+    'sidebar.resume_ok': 'Resume: Uploaded',
+    // -- Main Agent Chat --
+    'chat.placeholder': 'Chat with Interview Mate...',
+    'chat.clear': 'Clear Chat',
+    'chat.clear_confirm': 'Clear all messages?',
+    'chat.cleared': 'Chat cleared',
+    'chat.title': 'Interview Mate',
+    'chat.subtitle': 'Your AI Interview Prep Companion',
+    'chat.welcome': "Hi! I'm Interview Mate, your interview prep companion. I can help you make a study plan, answer questions about interviews, and review your responses. What would you like to talk about?",
+    // -- History --
+    'history.title': 'Interview History',
+    'history.empty': 'No interview records yet.\nGo to Mock Interview to start your first practice!',
+    'history.rounds': 'rounds',
+    'history.view_detail': 'View Detail',
+    'history.back': '← Back to list',
+    'history.delete': 'Delete',
+    'history.delete_confirm': 'Delete this interview record?',
+    'history.deleted': 'Deleted',
+    // -- Agent Config --
+    'agent.title': 'Configure Main Agent',
+    'agent.preset_label': 'Preset Personality',
+    'agent.custom_label': 'Custom System Prompt (optional)',
+    'agent.preset_friendly': 'Friendly Companion',
+    'agent.preset_strict': 'Strict Mentor',
+    'agent.preset_wise': 'Wise Scholar',
+    'agent.save': 'Save',
+    'agent.saved': 'Agent configuration saved',
+    // -- User Profile --
+    'profile.title': 'Edit Profile',
+    'profile.name_label': 'Your Name',
+    'profile.name_placeholder': 'Let the Agent know how to address you',
+    'profile.resume_label': 'Resume',
+    'profile.save': 'Save',
+    'profile.saved': 'Profile saved',
   }
 };
 
@@ -322,7 +407,7 @@ function setLanguage(lang) {
   applyLanguage();
   const hasOnboarded = getStorage('hasOnboarded', false);
   if (!hasOnboarded) {
-    setTimeout(() => openOnboarding(), 400);
+    setTimeout(() => window.dispatchEvent(new CustomEvent('languagefirstset')), 400);
   }
 }
 
@@ -432,9 +517,3 @@ function t(key, vars = {}) {
 }
 
 export { _lang, getLanguage, setLanguage, toggleLanguage, applyLanguage, t };
-window._lang = _lang;
-window.getLanguage = getLanguage;
-window.setLanguage = setLanguage;
-window.toggleLanguage = toggleLanguage;
-window.applyLanguage = applyLanguage;
-window.t = t;

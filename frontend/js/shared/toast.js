@@ -25,4 +25,3 @@ function showToast(message, type = 'success') {
 }
 
 export { showToast };
-window.showToast = showToast;
