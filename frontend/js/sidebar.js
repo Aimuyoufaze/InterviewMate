@@ -1,15 +1,11 @@
 /**
- * sidebar.js — 侧边栏导航 + 设置面板 + 全局初始化
+ * sidebar.js — 侧边栏导航 + 用户资料 + Agent 配置 + 全局初始化
  */
 import { API_BASE as API } from './shared/config.js';
 import { state } from './shared/state.js';
 import { getStorage, setStorage } from './shared/storage.js';
 import { getLanguage, setLanguage, toggleLanguage, applyLanguage, t } from './shared/i18n.js';
 import { showToast } from './shared/toast.js';
-import { switchView } from './router.js';
-import { initSetup } from './setup.js';
-import './chat.js';
-import './history.js';
 
 // ══════════════════════════════════════════════════
 // 初始化
@@ -17,39 +13,25 @@ import './history.js';
 
 async function init() {
   applyLanguage();
-
-  // 加载用户资料
   loadUserProfile();
-
-  // 加载简历状态
   loadResumeStatus();
-
   setupEventListeners();
 
-  // 语言切换时更新 UI
   window.addEventListener('languagechanged', () => {
     loadResumeStatus();
     updateSidebarUI();
   });
 
-  // 视图切换时高亮侧边栏
-  window.addEventListener('viewchanged', () => {
-    updateSidebarUI();
-  });
-
-  // 首次访问 → 显示语言选择
-  const langChosen = getStorage('langChosen', false);
-  if (!langChosen) {
-    setTimeout(() => {
-      document.getElementById('langModal').classList.add('show');
-    }, 300);
+  // 首次访问 → 显示语言选择（仅 chat 页有此弹窗，其他页跳过）
+  const langModal = document.getElementById('langModal');
+  if (langModal) {
+    const langChosen = getStorage('langChosen', false);
+    if (!langChosen) {
+      setTimeout(() => {
+        langModal.classList.add('show');
+      }, 300);
+    }
   }
-
-  // 预初始化 setup 模块
-  initSetup();
-
-  // 默认进入对话视图
-  switchView('chat');
 }
 
 // ══════════════════════════════════════════════════
@@ -57,60 +39,63 @@ async function init() {
 // ══════════════════════════════════════════════════
 
 function setupEventListeners() {
-  // 侧边栏导航
+  // 侧边栏导航 — MPA 整页跳转
   document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.view));
+    btn.addEventListener('click', () => {
+      window.location.href = `/${btn.dataset.view}`;
+    });
   });
 
   // 语言切换
-  document.getElementById('langToggle').addEventListener('click', toggleLanguage);
-  document.getElementById('langZhBtn').addEventListener('click', () => setLanguage('zh'));
-  document.getElementById('langEnBtn').addEventListener('click', () => setLanguage('en'));
+  document.getElementById('langToggle')?.addEventListener('click', toggleLanguage);
+  document.getElementById('langZhBtn')?.addEventListener('click', () => setLanguage('zh'));
+  document.getElementById('langEnBtn')?.addEventListener('click', () => setLanguage('en'));
 
-  // 侧边栏底部 — 编辑资料
-  document.getElementById('sidebarProfileBtn').addEventListener('click', openProfileModal);
-  document.getElementById('profileSaveBtn').addEventListener('click', saveProfile);
-  document.getElementById('profileCloseBtn').addEventListener('click', () => {
-    document.getElementById('profileModal').classList.remove('show');
+  // 侧边栏底部 — 编辑资料（所有页面共享）
+  document.getElementById('sidebarProfileBtn')?.addEventListener('click', openProfileModal);
+  document.getElementById('profileSaveBtn')?.addEventListener('click', saveProfile);
+  document.getElementById('profileCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('profileModal')?.classList.remove('show');
   });
-  document.getElementById('profileResumeUploadBtn').addEventListener('click', () => {
-    document.getElementById('profileResumeInput').click();
+  document.getElementById('profileResumeUploadBtn')?.addEventListener('click', () => {
+    document.getElementById('profileResumeInput')?.click();
   });
-  document.getElementById('profileResumeInput').addEventListener('change', handleProfileResume);
+  document.getElementById('profileResumeInput')?.addEventListener('change', handleProfileResume);
 
-  // 侧边栏底部 — 配置 Agent
-  document.getElementById('sidebarAgentBtn').addEventListener('click', openAgentModal);
-  document.getElementById('agentSaveBtn').addEventListener('click', saveAgentConfig);
-  document.getElementById('agentCloseBtn').addEventListener('click', () => {
-    document.getElementById('agentModal').classList.remove('show');
+  // 侧边栏底部 — 配置 Agent（所有页面共享）
+  document.getElementById('sidebarAgentBtn')?.addEventListener('click', openAgentModal);
+  document.getElementById('agentSaveBtn')?.addEventListener('click', saveAgentConfig);
+  document.getElementById('agentCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('agentModal')?.classList.remove('show');
   });
   document.querySelectorAll('.agent-preset').forEach(btn => {
     btn.addEventListener('click', () => selectAgentPreset(btn.dataset.profile));
   });
 
-  // 设置模态框
-  document.getElementById('settingsCloseBtn').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.remove('show');
+  // 设置弹窗 — 仅 interview 页
+  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('settingsModal')?.classList.remove('show');
   });
-  document.getElementById('settingsBgUploadBtn').addEventListener('click', () => {
-    document.getElementById('settingsFileInput').click();
+  document.getElementById('settingsBgUploadBtn')?.addEventListener('click', () => {
+    document.getElementById('settingsFileInput')?.click();
   });
-  document.getElementById('settingsFileInput').addEventListener('change', handleSettingsFile);
-  document.getElementById('settingsDeleteBg').addEventListener('click', deleteBackgroundFile);
-  document.getElementById('settingsResumeUploadBtn').addEventListener('click', () => {
-    document.getElementById('settingsResumeInput').click();
+  document.getElementById('settingsFileInput')?.addEventListener('change', handleSettingsFile);
+  document.getElementById('settingsDeleteBg')?.addEventListener('click', deleteBackgroundFile);
+  document.getElementById('settingsResumeUploadBtn')?.addEventListener('click', () => {
+    document.getElementById('settingsResumeInput')?.click();
   });
-  document.getElementById('settingsResumeInput').addEventListener('change', handleSettingsResume);
-  document.getElementById('settingsDeleteResume').addEventListener('click', deleteSettingsResume);
+  document.getElementById('settingsResumeInput')?.addEventListener('change', handleSettingsResume);
+  document.getElementById('settingsDeleteResume')?.addEventListener('click', deleteSettingsResume);
 
-  // 导师详情
-  document.getElementById('personaDetailCloseBtn').addEventListener('click', () => {
-    document.getElementById('personaDetailModal').classList.remove('show');
+  // 导师详情弹窗 — 仅 interview 页
+  document.getElementById('personaDetailCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('personaDetailModal')?.classList.remove('show');
   });
 
-  // 反馈弹窗
-  document.getElementById('downloadSummaryBtn').addEventListener('click', downloadSummary);
-  document.querySelector('#feedbackModal .feedback-close-btn').addEventListener('click', closeFeedback);
+  // 反馈弹窗 — 仅 interview 页
+  document.getElementById('downloadSummaryBtn')?.addEventListener('click', downloadSummary);
+  const feedbackCloseBtn = document.querySelector('#feedbackModal .feedback-close-btn');
+  if (feedbackCloseBtn) feedbackCloseBtn.addEventListener('click', closeFeedback);
 }
 
 // ══════════════════════════════════════════════════
