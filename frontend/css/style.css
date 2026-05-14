@@ -118,8 +118,6 @@ main, .messages, #welcomeScreen{
 
 /* ============ 欢迎/设置页面 ============ */
 #welcomeScreen{
-  max-width:720px;
-  margin:0 auto;
   padding:80px 40px 160px;
   display:flex;flex-direction:column;
   gap:64px;
