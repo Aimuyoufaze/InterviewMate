@@ -26,9 +26,12 @@ async function initChat() {
   renderMessages();
   setupChatListeners();
 
-  // 首次对话由 viewchanged 事件统一触发，避免与 sidebar 的 switchView 重复
+  // 首次对话 → 触发引导消息
+  if (state.chatMessages.length === 0 && !getStorage('hasChatted', false)) {
+    isFirstVisit = true;
+    sendFirstMessage();
+  }
 
-  // 监听语言变化
   window.addEventListener('languagechanged', () => {
     const input = document.getElementById('chatMessageInput');
     if (input) input.placeholder = t('chat.placeholder');
@@ -203,25 +206,5 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML.replace(/\n/g, '<br>');
 }
-
-// ══════════════════════════════════════════════════
-// 监听 viewchanged
-// ══════════════════════════════════════════════════
-
-window.addEventListener('viewchanged', (e) => {
-  if (e.detail.view === 'chat') {
-    const input = document.getElementById('chatMessageInput');
-    if (input) {
-      input.placeholder = t('chat.placeholder');
-      input.focus();
-    }
-    renderMessages();
-    // 如果还没聊过天,触发首次引导
-    if (state.chatMessages.length === 0 && !getStorage('hasChatted', false)) {
-      isFirstVisit = true;
-      sendFirstMessage();
-    }
-  }
-});
 
 document.addEventListener('DOMContentLoaded', initChat);
