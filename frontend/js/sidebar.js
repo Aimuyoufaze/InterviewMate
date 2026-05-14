@@ -196,7 +196,7 @@ const AGENT_PRESET_PROMPTS = {
   wise: '你是一位睿智、博学的学术导师。你的角色是：\n- 引经据典、深入浅出地解答问题\n- 启发用户从多角度思考问题\n- 分享学术界的思维方式和文化\n- 在回答中融入学科前沿动态和方法论\n- 像一位德高望重的教授一样循循善诱',
 };
 
-function openAgentModal() {
+async function openAgentModal() {
   const profile = state.userProfile;
 
   // 高亮当前预设
@@ -207,6 +207,113 @@ function openAgentModal() {
   // 填充自定义 prompt
   const prompt = profile.agentCustomPrompt || AGENT_PRESET_PROMPTS[profile.agentProfileId] || '';
   document.getElementById('agentCustomPrompt').value = prompt;
+
+  // 查询服务器 Key 状态
+  let hasServerKey = false;
+  try {
+    const res = await fetch(`${API}/api/config/status`);
+    const data = await res.json();
+    hasServerKey = data.has_server_key;
+  } catch (e) { /* ignore */ }
+
+  // 填充 API Key
+  const apiKeyInput = document.getElementById('agentApiKey');
+  const clearKeyBtn = document.getElementById('agentClearKeyBtn');
+  const keyLabel = document.querySelector('label[data-i18n="agent.api_key_label"]');
+  const keyHint = document.getElementById('agentKeyHint');
+
+  if (profile.deepseekApiKey) {
+    // 用户配置了个人 Key → 优先使用
+    apiKeyInput.value = profile.deepseekApiKey;
+    clearKeyBtn.style.display = 'inline-block';
+    if (keyLabel) {
+      keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#16A34A;font-weight:400">' + t('agent.key_source_user') + '</span>';
+    }
+    if (keyHint) {
+      keyHint.textContent = t('agent.key_user_active');
+      keyHint.style.color = '#16A34A';
+    }
+  } else if (hasServerKey) {
+    // 用户未配置，服务器有默认 Key
+    apiKeyInput.value = '';
+    clearKeyBtn.style.display = 'none';
+    if (keyLabel) {
+      keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#B45309;font-weight:400">' + t('agent.key_source_server') + '</span>';
+    }
+    if (keyHint) {
+      keyHint.textContent = t('agent.key_server_hint');
+      keyHint.style.color = '#B45309';
+    }
+  } else {
+    // 没有任何 Key 可用
+    apiKeyInput.value = '';
+    clearKeyBtn.style.display = 'none';
+    if (keyLabel) {
+      keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#DC2626;font-weight:400">' + t('agent.key_source_none') + '</span>';
+    }
+    if (keyHint) {
+      keyHint.textContent = t('agent.key_none_hint');
+      keyHint.style.color = '#DC2626';
+    }
+  }
+
+  document.getElementById('agentBaseUrl').value = profile.deepseekBaseUrl || '';
+
+  // 清除按钮 → 回退到服务器默认
+  clearKeyBtn.onclick = (e) => {
+    e.preventDefault();
+    apiKeyInput.value = '';
+    profile.deepseekApiKey = '';
+    clearKeyBtn.style.display = 'none';
+    if (keyLabel) {
+      if (hasServerKey) {
+        keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#B45309;font-weight:400">' + t('agent.key_source_server') + '</span>';
+      } else {
+        keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#DC2626;font-weight:400">' + t('agent.key_source_none') + '</span>';
+      }
+    }
+    if (keyHint) {
+      if (hasServerKey) {
+        keyHint.textContent = t('agent.key_server_hint');
+        keyHint.style.color = '#B45309';
+      } else {
+        keyHint.textContent = t('agent.key_none_hint');
+        keyHint.style.color = '#DC2626';
+      }
+    }
+  };
+
+  // 输入时更新状态
+  apiKeyInput.oninput = () => {
+    if (apiKeyInput.value) {
+      clearKeyBtn.style.display = 'inline-block';
+      if (keyLabel) {
+        keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#16A34A;font-weight:400">' + t('agent.key_source_user') + '</span>';
+      }
+      if (keyHint) {
+        keyHint.textContent = t('agent.key_user_active');
+        keyHint.style.color = '#16A34A';
+      }
+    } else {
+      clearKeyBtn.style.display = 'none';
+      if (keyLabel) {
+        if (hasServerKey) {
+          keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#B45309;font-weight:400">' + t('agent.key_source_server') + '</span>';
+        } else {
+          keyLabel.innerHTML = t('agent.api_key_label') + ' <span style="color:#DC2626;font-weight:400">' + t('agent.key_source_none') + '</span>';
+        }
+      }
+      if (keyHint) {
+        if (hasServerKey) {
+          keyHint.textContent = t('agent.key_server_hint');
+          keyHint.style.color = '#B45309';
+        } else {
+          keyHint.textContent = t('agent.key_none_hint');
+          keyHint.style.color = '#DC2626';
+        }
+      }
+    }
+  };
 
   document.getElementById('agentModal').classList.add('show');
 }
@@ -222,6 +329,9 @@ function selectAgentPreset(profileId) {
 function saveAgentConfig() {
   state.userProfile.agentProfileId = document.querySelector('.agent-preset.active')?.dataset?.profile || 'friendly';
   state.userProfile.agentCustomPrompt = document.getElementById('agentCustomPrompt').value.trim();
+  // HTTP headers only allow ASCII, strip non-ASCII characters
+  state.userProfile.deepseekApiKey = document.getElementById('agentApiKey').value.trim().replace(/[^\x00-\x7F]/g, '');
+  state.userProfile.deepseekBaseUrl = document.getElementById('agentBaseUrl').value.trim().replace(/[^\x00-\x7F]/g, '');
   setStorage('userProfile', state.userProfile);
   document.getElementById('agentModal').classList.remove('show');
   showToast(t('agent.saved'), 'success');

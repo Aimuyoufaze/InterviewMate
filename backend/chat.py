@@ -1,15 +1,9 @@
 """
 Main Agent 聊天引擎 — 面试备考陪伴助手
 """
-import os
-
 import httpx
-from dotenv import load_dotenv
 
-load_dotenv()
-
-DEEPSEEK_BASE = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+from api_config import get_api_key, get_base_url
 
 # ── 预设 Agent 人格 ──────────────────────────
 
@@ -103,14 +97,16 @@ def build_system_prompt(agent_profile: dict | None = None, resume_content: str =
 async def _call_deepseek(messages: list[dict], max_tokens: int = 1024,
                           temperature: float = 0.7) -> str:
     """调用 DeepSeek Chat API"""
-    if not DEEPSEEK_KEY:
-        return "请配置 DEEPSEEK_API_KEY 后重试。"
+    key = get_api_key()
+    base = get_base_url()
+    if not key:
+        return "请配置 DeepSeek API Key 后重试。可在左侧「配置 Agent」中设置。"
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(
-            f"{DEEPSEEK_BASE}/v1/chat/completions",
+            f"{base}/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             },
             json={
@@ -120,6 +116,8 @@ async def _call_deepseek(messages: list[dict], max_tokens: int = 1024,
                 "temperature": temperature
             }
         )
+        if resp.status_code == 401:
+            return "API Key 无效或已过期，请在左侧「配置 Agent」中更新。"
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"]

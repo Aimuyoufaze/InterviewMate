@@ -1,7 +1,7 @@
 /**
  * setup.js — 模拟面试 Setup 子视图
  */
-import { API_BASE as API } from './shared/config.js';
+import { API_BASE as API, getApiKeyHeaders } from './shared/config.js';
 import { state } from './shared/state.js';
 import { getStorage, setStorage } from './shared/storage.js';
 import { getLanguage, applyLanguage, t } from './shared/i18n.js';
@@ -272,7 +272,10 @@ async function extractPersona() {
   try {
     const res = await fetch(`${API}/api/personas/extract`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign(
+        { 'Content-Type': 'application/json' },
+        getApiKeyHeaders()
+      ),
       body: JSON.stringify({ name, affiliation, language: getLanguage() })
     });
     const data = await res.json();

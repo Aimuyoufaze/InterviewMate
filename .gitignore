@@ -6,3 +6,5 @@ backend/uploads/
 .env
 .DS_Store
 reports/
+.claude/
+docs/

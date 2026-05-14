@@ -2,7 +2,6 @@
 面试引擎——基于 DeepSeek 的多轮模拟面试
 """
 import json
-import os
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -10,9 +9,7 @@ from typing import Optional
 import httpx
 
 from persona import get_style_prompt
-
-DEEPSEEK_BASE = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+from api_config import get_api_key, get_base_url
 
 SYSTEM_PROMPT_QUESTION = """你是一位研究生入学面试官。你的任务是根据以下信息生成面试问题。
 
@@ -98,14 +95,16 @@ def _lang_instruction(language: str) -> str:
 
 async def _call_deepseek(messages: list[dict], max_tokens: int = 1024, temperature: float = 0.7) -> str:
     """调用 DeepSeek Chat API"""
-    if not DEEPSEEK_KEY:
-        return "[模拟回复] 请配置 DEEPSEEK_API_KEY 后重试。"
+    key = get_api_key()
+    base = get_base_url()
+    if not key:
+        return "[模拟回复] 请配置 DeepSeek API Key 后重试。可在左侧「配置 Agent」中设置。"
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(
-            f"{DEEPSEEK_BASE}/v1/chat/completions",
+            f"{base}/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             },
             json={
@@ -115,6 +114,8 @@ async def _call_deepseek(messages: list[dict], max_tokens: int = 1024, temperatu
                 "temperature": temperature
             }
         )
+        if resp.status_code == 401:
+            return "[模拟回复] API Key 无效或已过期，请在左侧「配置 Agent」中更新。"
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"]

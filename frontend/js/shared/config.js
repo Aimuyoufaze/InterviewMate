@@ -4,4 +4,21 @@ const API_BASE = (window.location.origin.includes('localhost') || window.locatio
   ? 'http://localhost:8000'
   : '';
 
-export { API_BASE };
+function getApiKeyHeaders() {
+  const headers = {};
+  let profile;
+  try {
+    const raw = localStorage.getItem('interviewmate_userProfile');
+    if (raw) profile = JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  let key = (profile && profile.deepseekApiKey) || '';
+  let url = (profile && profile.deepseekBaseUrl) || '';
+  // HTTP headers only allow ASCII; strip non-ASCII chars
+  key = key.replace(/[^\x00-\x7F]/g, '');
+  url = url.replace(/[^\x00-\x7F]/g, '');
+  if (key) headers['X-DeepSeek-API-Key'] = key;
+  if (url) headers['X-DeepSeek-Base-URL'] = url;
+  return headers;
+}
+
+export { API_BASE, getApiKeyHeaders };

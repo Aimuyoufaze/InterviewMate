@@ -29,6 +29,8 @@ const state = {
     name: '',
     agentProfileId: 'friendly',
     agentCustomPrompt: '',
+    deepseekApiKey: '',
+    deepseekBaseUrl: '',
   }
 };
 

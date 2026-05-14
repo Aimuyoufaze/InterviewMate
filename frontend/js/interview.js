@@ -1,7 +1,7 @@
 /**
  * interview.js — 模拟面试 Active 子视图
  */
-import { API_BASE as API } from './shared/config.js';
+import { API_BASE as API, getApiKeyHeaders } from './shared/config.js';
 import { state } from './shared/state.js';
 import { getLanguage, applyLanguage, t } from './shared/i18n.js';
 import { showToast } from './shared/toast.js';
@@ -62,7 +62,10 @@ async function startInterview(config) {
   try {
     const res = await fetch(`${API}/api/interview/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign(
+        { 'Content-Type': 'application/json' },
+        getApiKeyHeaders()
+      ),
       body: JSON.stringify({
         persona_id: config.personaId,
         persona_name: config.personaName,
@@ -105,7 +108,10 @@ async function sendMessage() {
   try {
     const res = await fetch(`${API}/api/interview/respond`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign(
+        { 'Content-Type': 'application/json' },
+        getApiKeyHeaders()
+      ),
       body: JSON.stringify({ session_id: state.sessionId, message: text })
     });
     const data = await res.json();
@@ -133,7 +139,10 @@ async function endInterview() {
   try {
     const res = await fetch(`${API}/api/interview/end`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign(
+        { 'Content-Type': 'application/json' },
+        getApiKeyHeaders()
+      ),
       body: JSON.stringify({ session_id: state.sessionId })
     });
     const data = await res.json();

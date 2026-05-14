@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -36,6 +36,7 @@ from persona import (
 from interview import start_interview, continue_interview, end_interview
 from chat import chat as main_agent_chat, AGENT_PROFILES
 from history import list_sessions, get_session as history_get_session
+from api_config import set_api_key, set_base_url
 
 app = FastAPI(title="Interview Mate", version="0.2.0")
 
@@ -304,6 +305,17 @@ async def delete_resume():
     _save_resume_meta({"filename": None, "filepath": None, "content": None})
     return {"message": "简历已删除"}
 
+
+async def apply_api_key_override(request: Request):
+    """Dependency: Read API key/URL from custom HTTP headers and set context vars."""
+    api_key = request.headers.get("X-DeepSeek-API-Key", "")
+    base_url = request.headers.get("X-DeepSeek-Base-URL", "")
+    if api_key:
+        set_api_key(api_key)
+    if base_url:
+        set_base_url(base_url)
+
+
 # ═══════════════════════════════════════════════════
 # API 路由
 # ═══════════════════════════════════════════════════
@@ -326,7 +338,7 @@ async def get_persona_detail(pid: str, language: str = "zh"):
     return {"persona": p}
 
 @app.post("/api/personas/extract")
-async def extract_persona(req: ExtractRequest):
+async def extract_persona(req: ExtractRequest, _: bool = Depends(apply_api_key_override)):
     """
     Persona Extraction (蒸馏)：
     根据导师姓名和机构，搜索 ArXiv 论文 + 网络公开信息，
@@ -348,7 +360,7 @@ async def remove_persona(pid: str):
     return {"message": f"已删除面试官: {pid}"}
 
 @app.post("/api/interview/start")
-async def interview_start(req: StartRequest):
+async def interview_start(req: StartRequest, _: bool = Depends(apply_api_key_override)):
     """开始面试（可选携带背景文件内容）"""
     if not get_persona(req.persona_id):
         raise HTTPException(status_code=400, detail="无效的面试官人格 ID")
@@ -366,7 +378,7 @@ async def interview_start(req: StartRequest):
     return result
 
 @app.post("/api/interview/respond")
-async def interview_respond(req: ContinueRequest):
+async def interview_respond(req: ContinueRequest, _: bool = Depends(apply_api_key_override)):
     """继续面试——回复面试官"""
     result = await continue_interview(req.session_id, req.message)
     if "error" in result:
@@ -374,7 +386,7 @@ async def interview_respond(req: ContinueRequest):
     return result
 
 @app.post("/api/interview/end")
-async def interview_end(req: EndRequest):
+async def interview_end(req: EndRequest, _: bool = Depends(apply_api_key_override)):
     """结束面试并获取反馈"""
     result = await end_interview(req.session_id)
     if "error" in result:
@@ -502,7 +514,7 @@ async def _local_stt(audio_bytes: bytes) -> dict:
 # ═══════════════════════════════════════════════════
 
 @app.post("/api/chat")
-async def agent_chat(req: ChatRequest):
+async def agent_chat(req: ChatRequest, _: bool = Depends(apply_api_key_override)):
     """Main Agent 对话——面试备考陪伴助手"""
     try:
         result = await main_agent_chat(
@@ -529,6 +541,18 @@ async def get_agent_profiles(language: str = "zh"):
             "name": profile.get("name_zh" if language == "zh" else "name_en", key),
         })
     return {"profiles": profiles}
+
+
+@app.get("/api/config/status")
+async def get_config_status():
+    """返回服务器端 API Key 配置状态"""
+    import os
+    server_key = os.getenv("DEEPSEEK_API_KEY", "")
+    server_url = os.getenv("DEEPSEEK_BASE_URL", "")
+    return {
+        "has_server_key": bool(server_key),
+        "has_server_url": bool(server_url),
+    }
 
 
 # ═══════════════════════════════════════════════════
