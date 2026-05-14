@@ -584,19 +584,33 @@ async def delete_history(session_id: str):
 
 
 # ═══════════════════════════════════════════════════
-# 静态文件服务（生产环境：前端由后端统一托管）
+# 静态文件服务（MPA：每页一个显式路由）
 # ═══════════════════════════════════════════════════
 
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
-if FRONTEND_DIR.exists():
-    @app.get("/")
-    async def serve_frontend_root():
-        return FileResponse(str(FRONTEND_DIR / "index.html"))
+PAGES_DIR = FRONTEND_DIR / "pages"
 
-    # 托管前端静态文件（CSS、JS、图片等）
-    # 注意：此 mount 必须在所有 API 路由之后
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-    print(f"[OK] Frontend: {FRONTEND_DIR}")
+if PAGES_DIR.exists():
+    @app.get("/")
+    async def serve_chat_root():
+        return FileResponse(str(PAGES_DIR / "chat.html"))
+
+    @app.get("/chat")
+    async def serve_chat():
+        return FileResponse(str(PAGES_DIR / "chat.html"))
+
+    @app.get("/interview")
+    async def serve_interview():
+        return FileResponse(str(PAGES_DIR / "interview.html"))
+
+    @app.get("/history")
+    async def serve_history():
+        return FileResponse(str(PAGES_DIR / "history.html"))
+
+    # CSS / JS 等静态资源（注意：mount 必须在所有 API 路由之后）
+    app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
+    app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
+    print(f"[OK] Frontend (MPA): {PAGES_DIR}")
 
 # ═══════════════════════════════════════════════════
 # 启动
