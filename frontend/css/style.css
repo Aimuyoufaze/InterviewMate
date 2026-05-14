@@ -675,6 +675,7 @@ main, .messages, #welcomeScreen{
 /* History 视图 */
 #view-history .messages{
   flex:1;overflow-y:auto;
+  padding:24px 0 40px;
 }
 
 /* ============ Chat Header ============ */

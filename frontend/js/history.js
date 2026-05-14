@@ -98,32 +98,34 @@ async function loadHistoryDetail(sessionId) {
     const date = formatDate(session.ended_at || '');
 
     detail.innerHTML = `
-      <div style="margin-bottom:16px">
-        <button class="btn btn-outline btn-sm" id="historyBackBtn">${t('history.back')}</button>
-      </div>
-      <div class="welcome-hero" style="margin-bottom:20px">
-        <h2>🎓 ${escapeHtml(session.persona_name || session.persona_id)}</h2>
-        <p>${escapeHtml(session.field)} · ${session.total_rounds} ${t('history.rounds')} · ${date}</p>
-      </div>
-
-      <div class="setup-section">
-        <div class="num">💬</div>
-        <div class="body">
-          <h3>对话记录</h3>
-          <div id="historyTranscript"></div>
+      <div style="max-width:900px;margin:0 auto;padding:0 40px">
+        <div style="margin-bottom:16px">
+          <button class="btn btn-outline btn-sm" id="historyBackBtn">${t('history.back')}</button>
         </div>
-      </div>
-
-      <div class="setup-section">
-        <div class="num">📊</div>
-        <div class="body">
-          <h3 data-i18n="feedback.title">面试评估报告</h3>
-          <pre style="white-space:pre-wrap;word-break:break-word;background:var(--paper);padding:16px;border-radius:8px;font-size:13px;line-height:1.7;color:var(--ink-2);border:1px solid var(--line)">${escapeHtml(session.feedback || '')}</pre>
+        <div class="welcome-hero" style="margin-bottom:20px">
+          <h2>🎓 ${escapeHtml(session.persona_name || session.persona_id)}</h2>
+          <p>${escapeHtml(session.field)} · ${session.total_rounds} ${t('history.rounds')} · ${date}</p>
         </div>
-      </div>
 
-      <div style="text-align:center;padding:16px">
-        <button class="btn btn-outline" id="historyDownloadBtn">${t('feedback.download')}</button>
+        <div class="setup-section">
+          <div class="num">💬</div>
+          <div class="body">
+            <h3>对话记录</h3>
+            <div id="historyTranscript"></div>
+          </div>
+        </div>
+
+        <div class="setup-section">
+          <div class="num">📊</div>
+          <div class="body">
+            <h3 data-i18n="feedback.title">面试评估报告</h3>
+            <pre style="white-space:pre-wrap;word-break:break-word;background:var(--paper);padding:16px;border-radius:8px;font-size:13px;line-height:1.7;color:var(--ink-2);border:1px solid var(--line)">${escapeHtml(session.feedback || '')}</pre>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:16px">
+          <button class="btn btn-outline" id="historyDownloadBtn">${t('feedback.download')}</button>
+        </div>
       </div>
     `;
 
