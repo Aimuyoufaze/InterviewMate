@@ -11,11 +11,7 @@ import { showToast } from './shared/toast.js';
 // ══════════════════════════════════════════════════
 
 function initHistory() {
-  window.addEventListener('viewchanged', (e) => {
-    if (e.detail.view === 'history') {
-      loadHistoryList();
-    }
-  });
+  loadHistoryList();
 }
 
 // ══════════════════════════════════════════════════

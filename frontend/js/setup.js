@@ -18,13 +18,6 @@ export function initSetup() {
   loadResumeStatusInSetup();
 
   window.addEventListener('languagechanged', () => loadPersonas());
-
-  // 当切换到 interview 视图且子状态为 setup 时,刷新列表
-  window.addEventListener('viewchanged', (e) => {
-    if (e.detail.view === 'interview' && state.interviewSubState === 'setup') {
-      refreshSetupUI();
-    }
-  });
 }
 
 function refreshSetupUI() {
@@ -469,3 +462,5 @@ export function returnToSetup() {
   document.getElementById('interviewSetup').style.display = '';
   refreshSetupUI();
 }
+
+document.addEventListener('DOMContentLoaded', initSetup);
