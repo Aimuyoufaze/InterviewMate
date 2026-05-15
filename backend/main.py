@@ -420,9 +420,11 @@ async def stt_transcribe(
         raise HTTPException(status_code=400, detail="音频文件为空")
 
     provider = os.getenv("STT_PROVIDER", "")
+    baidu_key = os.getenv("BAIDU_STT_API_KEY", "")
+    baidu_secret = os.getenv("BAIDU_STT_SECRET_KEY", "")
     stt_key = os.getenv("STT_API_KEY", "")
 
-    if provider == "baidu":
+    if provider == "baidu" or (not provider and baidu_key and baidu_secret):
         # 🅰️ 百度语音识别
         return await _baidu_stt(content)
     elif stt_key:
