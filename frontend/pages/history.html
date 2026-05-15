@@ -81,11 +81,31 @@
       <input type="text" id="profileNameInput" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-top:4px" />
     </div>
     <div class="form-group">
-      <label data-i18n="profile.resume_label">简历</label>
-      <div style="margin-top:4px;display:flex;gap:8px;align-items:center">
-        <input type="file" id="profileResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
-        <button class="btn btn-outline btn-sm" id="profileResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
-        <span id="profileResumeStatus" style="font-size:13px;color:var(--ink-3)" data-i18n="settings.resume_none">未上传简历</span>
+      <label data-i18n="settings.bg_file">项目背景文件</label>
+      <div id="settingsBgInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.bg_none">未上传背景文件</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsBgUploadBtn" data-i18n="settings.bg_upload">上传文件</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteBg" style="display:none" data-i18n="settings.bg_delete">删除文件</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="settings.resume">个人简历</label>
+      <div id="settingsResumeInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.resume_none">未上传简历</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteResume" style="display:none" data-i18n="settings.resume_delete">删除简历</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="settings.persona">当前面试官</label>
+      <div id="settingsPersonaInfo" style="font-size:13px;color:var(--ink-3);padding:6px 0">
+        <span data-i18n="settings.persona_none">暂无选择</span>
       </div>
     </div>
     <div class="form-actions">

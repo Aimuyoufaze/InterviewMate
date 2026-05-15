@@ -57,10 +57,6 @@ function setupEventListeners() {
   document.getElementById('profileCloseBtn')?.addEventListener('click', () => {
     document.getElementById('profileModal')?.classList.remove('show');
   });
-  document.getElementById('profileResumeUploadBtn')?.addEventListener('click', () => {
-    document.getElementById('profileResumeInput')?.click();
-  });
-  document.getElementById('profileResumeInput')?.addEventListener('change', handleProfileResume);
 
   // 侧边栏底部 — 配置 Agent（所有页面共享）
   document.getElementById('sidebarAgentBtn')?.addEventListener('click', openAgentModal);
@@ -73,9 +69,6 @@ function setupEventListeners() {
   });
 
   // 设置弹窗 — 仅 interview 页
-  document.getElementById('settingsCloseBtn')?.addEventListener('click', () => {
-    document.getElementById('settingsModal')?.classList.remove('show');
-  });
   document.getElementById('settingsBgUploadBtn')?.addEventListener('click', () => {
     document.getElementById('settingsFileInput')?.click();
   });
@@ -127,27 +120,19 @@ async function loadResumeStatus() {
       el.textContent = t('sidebar.resume_status');
       el.style.color = '';
     }
-    // 同步更新 profile 弹窗
-    const profileStatus = document.getElementById('profileResumeStatus');
-    if (profileStatus) {
-      profileStatus.textContent = data.has_resume ? `✅ ${data.filename}` : t('settings.resume_none');
-    }
   } catch (e) {
     // 忽略
   }
 }
 
 function openProfileModal() {
-  if (document.getElementById('settingsModal')) {
-    openSettings();
-    return;
-  }
   const profileNameInput = document.getElementById('profileNameInput');
   const profileModal = document.getElementById('profileModal');
   if (!profileNameInput || !profileModal) return;
   profileNameInput.value = state.userProfile.name || '';
-  profileModal.classList.add('show');
+  updateSettingsUI();
   loadResumeStatus();
+  profileModal.classList.add('show');
 }
 
 function saveProfile() {
@@ -156,26 +141,6 @@ function saveProfile() {
   updateSidebarUI();
   document.getElementById('profileModal').classList.remove('show');
   showToast(t('profile.saved'), 'success');
-}
-
-async function handleProfileResume(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const res = await fetch(`${API}/api/resume/upload`, { method: 'POST', body: formData });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || '上传失败');
-    }
-    showToast(t('toast.resume_success'), 'success');
-    loadResumeStatus();
-  } catch (e) {
-    showToast(t('toast.upload_fail') + e.message, 'error');
-  }
 }
 
 // ══════════════════════════════════════════════════
@@ -334,8 +299,7 @@ function saveAgentConfig() {
 // ══════════════════════════════════════════════════
 
 export function openSettings() {
-  updateSettingsUI();
-  document.getElementById('settingsModal').classList.add('show');
+  openProfileModal();
 }
 
 async function updateSettingsUI() {
