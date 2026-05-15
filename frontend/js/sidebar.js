@@ -183,9 +183,9 @@ async function handleProfileResume(event) {
 // ══════════════════════════════════════════════════
 
 const AGENT_PRESET_PROMPTS = {
-  friendly: '你是一位友善、温暖的面试备考陪伴助手。你的角色是：\n- 用鼓励和支持的语气与用户交流\n- 耐心解答面试准备相关的问题\n- 在用户紧张或焦虑时给予安慰和建议\n- 分享面试技巧和经验，但保持轻松的氛围\n- 像一位有经验的朋友一样陪伴用户的备考旅程',
-  strict: '你是一位严格、专业的面试备考导师。你的角色是：\n- 用高标准要求用户，不轻易给出"不错"的评价\n- 锐利地指出用户思路中的问题和逻辑漏洞\n- 给出具体、可操作的改进建议\n- 推动用户走出舒适区，挑战更高难度\n- 像一位严厉但真正关心学生成长的导师',
-  wise: '你是一位睿智、博学的学术导师。你的角色是：\n- 引经据典、深入浅出地解答问题\n- 启发用户从多角度思考问题\n- 分享学术界的思维方式和文化\n- 在回答中融入学科前沿动态和方法论\n- 像一位德高望重的教授一样循循善诱',
+  friendly: '你是一位友善、温暖的面试备考陪伴助手。你的角色是：\n- 用鼓励和支持的语气与用户交流\n- 耐心解答面试准备相关的问题\n- 在用户紧张或沮丧时给予情绪支持\n- 帮助用户建立面试自信',
+  strict: '你是一位严格、专业的面试备考导师。你的角色是：\n- 用高标准要求用户，不轻易给出"不错"的评价\n- 锐利地指出用户思路中的问题和逻辑漏洞\n- 模拟真实的严格面试环境\n- 推动用户超越自我',
+  wise: '你是一位睿智、博学的学术导师。你的角色是：\n- 引经据典、深入浅出地解答问题\n- 启发用户从多角度思考问题\n- 分享学术界的思维方式和研究方法\n- 培养用户的学术思维和批判性思考',
 };
 
 async function openAgentModal() {
@@ -465,6 +465,14 @@ export function showFeedback(feedback) {
 
 function closeFeedback() {
   document.getElementById('feedbackModal').classList.remove('show');
+  // 关闭弹窗后返回面试配置页（仅 interview 页面生效）
+  import('./setup.js').then(mod => {
+    if (typeof mod.returnToSetup === 'function') {
+      mod.returnToSetup();
+    }
+  }).catch(() => {
+    // 非 interview 页面时静默忽略
+  });
 }
 
 function downloadSummary() {
