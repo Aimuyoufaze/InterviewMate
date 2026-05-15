@@ -295,7 +295,7 @@ async def search_web(name: str, affiliation: str = "", max_results: int = 5) -> 
                 "https://html.duckduckgo.com/html/",
                 params={"q": query},
                 headers={
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    "User-Agent": "Mozilla/5.0 (compatible; InterviewMate/1.0)"
                 }
             )
             if resp.status_code == 200:
@@ -363,31 +363,18 @@ async def fetch_pages(urls: list[str], max_chars: int = 3000) -> list[str]:
 
 # ── 4. DeepSeek 分析生成画像 ─────────────────────
 
-DEEPSEEK_BASE = None  # will read from env
-DEEPSEEK_KEY = None
-
-
-def _init_deepseek():
-    global DEEPSEEK_BASE, DEEPSEEK_KEY
-    if DEEPSEEK_KEY is not None:
-        return  # already loaded
-    from dotenv import load_dotenv
-    import os
-    load_dotenv()
-    DEEPSEEK_BASE = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-    DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-
-
 async def _call_deepseek(messages: list[dict], max_tokens: int = 4096, temperature: float = 0.7) -> str:
-    _init_deepseek()
-    if not DEEPSEEK_KEY:
-        return json.dumps({"error": "DEEPSEEK_API_KEY 未配置"})
+    from api_config import get_api_key, get_base_url
+    key = get_api_key()
+    base = get_base_url()
+    if not key:
+        return json.dumps({"error": "DeepSeek API Key 未配置，请在左侧「配置 Agent」中设置。"})
 
     async with httpx.AsyncClient(timeout=120.0) as client:
         resp = await client.post(
-            f"{DEEPSEEK_BASE}/v1/chat/completions",
+            f"{base}/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             },
             json={
@@ -397,6 +384,8 @@ async def _call_deepseek(messages: list[dict], max_tokens: int = 4096, temperatu
                 "temperature": temperature,
             }
         )
+        if resp.status_code == 401:
+            return json.dumps({"error": "API Key 无效或已过期，请在左侧「配置 Agent」中更新。"})
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"]

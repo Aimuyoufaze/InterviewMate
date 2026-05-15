@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Mate — 模拟面试</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<script type="module" src="../js/sidebar.js"></script>
+<script type="module" src="../js/setup.js"></script>
+<script type="module" src="../js/interview.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+<header>
+  <h1>Interview <i>Mate</i></h1>
+  <div class="nav">
+    <button id="langToggle" title="切换语言">🇨🇳</button>
+  </div>
+</header>
+
+<div class="app-container">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-list">
+      <button class="nav-item" data-view="chat">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label" data-i18n="nav.chat">对话</span>
+      </button>
+      <button class="nav-item active" data-view="interview">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label" data-i18n="nav.interview">模拟面试</span>
+      </button>
+      <button class="nav-item" data-view="history">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label" data-i18n="nav.history">历史记录</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">👤</div>
+        <div class="user-info">
+          <span class="user-name" id="sidebarUserName">User</span>
+          <span class="user-resume" id="sidebarResumeStatus" data-i18n="sidebar.resume_status">简历：未上传</span>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="btn btn-sm btn-outline" id="sidebarProfileBtn" data-i18n="sidebar.profile">编辑资料</button>
+        <button class="btn btn-sm btn-outline" id="sidebarAgentBtn" data-i18n="sidebar.agent">配置 Agent</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <div class="view-container" id="view-interview">
+
+      <!-- 面试 Setup -->
+      <div id="interviewSetup">
+        <div class="messages" id="welcomeScreen">
+          <div class="welcome-hero">
+            <span class="eyebrow" data-i18n="welcome.eyebrow">Mock Interview</span>
+            <h2 data-i18n="welcome.title" data-i18n-html="true">开启一场<br/>认真的<i>模拟面试</i>。</h2>
+            <p data-i18n="welcome.desc">选择一位面试官，确定方向，然后开始一场拟真度极高的对话练习。每一轮都会被记录，并在结束时生成评估报告。</p>
+          </div>
+
+          <div class="setup-section">
+            <div class="num">01</div>
+            <div class="body">
+              <h3 data-i18n="step.persona.title">选择面试官</h3>
+              <p class="helper" data-i18n="step.persona.helper">从内置人格中挑选，或在下方蒸馏出一位真实导师作为面试官。</p>
+              <div class="persona-list" id="personaList"></div>
+            </div>
+          </div>
+
+          <div class="setup-section">
+            <div class="num">02</div>
+            <div class="body">
+              <h3><span data-i18n="step.extract.title">蒸馏一位导师</span> <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper" data-i18n="step.extract.helper">输入导师姓名与所属机构，利用 AI 分析其论文和公开信息，自动生成专属面试官。</p>
+              <div class="extract-form">
+                <input type="text" id="extractName" placeholder="" />
+                <input type="text" id="extractAffil" placeholder="" />
+                <button class="btn btn-outline btn-sm" id="extractBtn" data-i18n="step.extract.btn">🎯 提取 Persona</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-section">
+            <div class="num">03</div>
+            <div class="body">
+              <h3><span data-i18n="step.resume.title">上传个人简历</span> <span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;margin-left:6px">可选</span></h3>
+              <p class="helper" data-i18n="step.resume.helper">上传你的简历，面试官将会阅读并根据你的背景和经历进行针对性提问。</p>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <label class="btn btn-outline resume-select-label" id="resumeSelectLabel" style="cursor:pointer;display:inline-flex">
+                  <span data-i18n="step.resume.select_btn" id="resumeBtnText">📄 选择文件</span>
+                  <input type="file" id="resumeFileInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+                </label>
+                <span id="resumeStatus" style="font-size:12.5px;color:var(--ink-3)" data-i18n="step.resume.not_uploaded">尚未上传</span>
+              </div>
+              <div id="resumeInfo" style="display:none;margin-top:4px">
+                <span style="font-size:12px;color:var(--ink-3)">已上传：</span>
+                <span id="resumeName" style="font-size:12px;font-weight:500;color:var(--ink)"></span>
+                <button class="btn btn-sm btn-outline resume-delete-btn" style="margin-left:8px;padding:2px 10px" data-i18n="step.resume.delete_btn">删除</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-section">
+            <div class="num">04</div>
+            <div class="body">
+              <h3 data-i18n="step.field.title">面试方向</h3>
+              <p class="helper" data-i18n="step.field.helper">这将决定面试官提问的领域与深度。</p>
+              <div class="field-input">
+                <label data-i18n="step.field.label">目标专业方向</label>
+                <select id="fieldSelect">
+                  <option value="__professor_field__" style="display:none" data-i18n="step.field.professor">该教授自身专业</option>
+                  <option value="计算机科学 / 人工智能" data-i18n="field.ai">计算机科学 / 人工智能</option>
+                  <option value="数据科学 / 机器学习" data-i18n="field.ds">数据科学 / 机器学习</option>
+                  <option value="自然语言处理" data-i18n="field.nlp">自然语言处理</option>
+                  <option value="计算机视觉" data-i18n="field.cv">计算机视觉</option>
+                  <option value="网络安全" data-i18n="field.security">网络安全</option>
+                  <option value="软件工程" data-i18n="field.se">软件工程</option>
+                  <option value="自动化" data-i18n="field.auto">自动化</option>
+                  <option value="机器人学" data-i18n="field.robotics">机器人学</option>
+                  <option value="生物信息学" data-i18n="field.bioinfo">生物信息学</option>
+                  <option value="认知科学" data-i18n="field.cogsci">认知科学</option>
+                  <option value="计算神经科学" data-i18n="field.neuro">计算神经科学</option>
+                  <option value="经济学" data-i18n="field.econ">经济学</option>
+                  <option value="管理学" data-i18n="field.mgmt">管理学</option>
+                  <option value="管理科学与工程" data-i18n="field.mse">管理科学与工程</option>
+                  <option value="统计学" data-i18n="field.stat">统计学</option>
+                  <option value="物理" data-i18n="field.physics">物理</option>
+                  <option value="数学" data-i18n="field.math">数学</option>
+                  <option value="化学" data-i18n="field.chem">化学</option>
+                  <option value="生物学" data-i18n="field.bio">生物学</option>
+                  <option value="医学" data-i18n="field.med">医学</option>
+                  <option value="法学" data-i18n="field.law">法学</option>
+                  <option value="教育学" data-i18n="field.edu">教育学</option>
+                  <option value="心理学" data-i18n="field.psych">心理学</option>
+                  <option value="其他（请自定义）" data-i18n="step.field.other">其他</option>
+                </select>
+                <input type="text" id="customField" placeholder="" style="display:none;margin-top:8px" />
+              </div>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button class="btn" id="startBtn" data-i18n="btn.start">开始面试 →</button>
+            <span style="font-size:12.5px;color:var(--ink-4)" data-i18n="btn.shortcut">回车键发送回答 · 支持语音输入</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 面试进行中 -->
+      <div id="interviewActive" style="display:none">
+        <div class="messages" id="interviewMessages"></div>
+        <div class="chat-status" id="chatStatus">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">就绪</span>
+        </div>
+        <div class="input-area" id="interviewInputArea">
+          <div class="input-wrapper">
+            <textarea id="messageInput" rows="1" placeholder="" disabled></textarea>
+            <button class="mic-btn" id="micBtn" title="语音输入" disabled>🎤</button>
+            <button class="send-btn" id="sendBtn" disabled data-i18n="btn.send">发送</button>
+          </div>
+        </div>
+        <div style="text-align:center;padding:16px">
+          <button class="btn btn-outline" id="endBtn" data-i18n="btn.end_interview">结束面试</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+</div>
+
+<!-- 弹窗：用户资料编辑 -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:440px">
+    <h2 data-i18n="profile.title">编辑资料</h2>
+    <div class="form-group">
+      <label data-i18n="profile.name_label">你的名字</label>
+      <input type="text" id="profileNameInput" style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-top:4px" />
+    </div>
+    <div class="form-group">
+      <label data-i18n="profile.resume_label">简历</label>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="profileResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="profileResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
+        <span id="profileResumeStatus" style="font-size:13px;color:var(--ink-3)" data-i18n="settings.resume_none">未上传简历</span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" id="profileCloseBtn" data-i18n="settings.close">关闭</button>
+      <button class="btn" id="profileSaveBtn" data-i18n="profile.save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：Agent 人格配置 -->
+<div class="modal-overlay" id="agentModal">
+  <div class="modal" style="max-width:520px">
+    <h2 data-i18n="agent.title">配置 Main Agent</h2>
+    <div class="form-group">
+      <label data-i18n="agent.preset_label">预设人格</label>
+      <div style="display:flex;gap:8px;margin-top:4px" id="agentPresetBtns">
+        <button class="btn btn-outline btn-sm agent-preset active" data-profile="friendly" data-i18n="agent.preset_friendly">友好陪伴型</button>
+        <button class="btn btn-outline btn-sm agent-preset" data-profile="strict" data-i18n="agent.preset_strict">严格导师型</button>
+        <button class="btn btn-outline btn-sm agent-preset" data-profile="wise" data-i18n="agent.preset_wise">睿智学者型</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="agent.api_key_label">DeepSeek API Key</label>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <input type="password" id="agentApiKey"
+               style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:monospace" />
+        <button class="btn btn-outline btn-sm" id="agentClearKeyBtn"
+                style="flex-shrink:0;display:none" data-i18n="agent.clear_key">清除</button>
+      </div>
+      <div id="agentKeyHint" style="font-size:11px;color:var(--ink-4);margin-top:4px">留空则使用服务器默认配置</div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="agent.base_url_label">DeepSeek Base URL</label>
+      <input type="text" id="agentBaseUrl"
+             style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:monospace;margin-top:4px"
+             placeholder="https://api.deepseek.com" />
+      <div style="font-size:11px;color:var(--ink-4);margin-top:4px" data-i18n="agent.base_url_hint">留空则使用默认地址</div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="agent.custom_label">自定义 System Prompt（可选）</label>
+      <textarea id="agentCustomPrompt" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:monospace;margin-top:4px;resize:vertical"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" id="agentCloseBtn" data-i18n="settings.close">关闭</button>
+      <button class="btn" id="agentSaveBtn" data-i18n="agent.save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：面试反馈报告 -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <h2 data-i18n="feedback.title">面试评估报告</h2>
+    <div class="feedback-content" id="feedbackContent" data-i18n="feedback.loading">加载中...</div>
+    <div style="display:flex;gap:10px;margin-top:28px">
+      <button class="btn btn-outline" style="flex:1;justify-content:center" id="downloadSummaryBtn" data-i18n="feedback.download">📥 下载面试总结</button>
+      <button class="btn feedback-close-btn" style="flex:1;background:var(--ink);color:#fff;margin-top:0;width:auto" data-i18n="feedback.close">关闭并回到首页</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：报告生成中 -->
+<div class="modal-overlay" id="loadingModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">⏳</div>
+    <h2 style="margin-bottom:8px" data-i18n="loading.title">报告生成中...</h2>
+    <p style="font-size:14px;color:var(--ink-3)" data-i18n="loading.desc">正在分析你的面试表现，请稍候</p>
+    <div class="spinner" style="margin:24px auto 0;width:24px;height:24px;border-width:3px"></div>
+  </div>
+</div>
+
+<!-- 弹窗：导师详情 -->
+<div class="modal-overlay" id="personaDetailModal">
+  <div class="modal">
+    <h2 data-i18n="detail.title">导师画像</h2>
+    <div id="personaDetailContent">
+      <div style="text-align:center;padding:40px;color:var(--ink-3)" data-i18n="detail.loading">加载中...</div>
+    </div>
+    <button class="btn close-btn" id="personaDetailCloseBtn" data-i18n="detail.close">关闭</button>
+  </div>
+</div>
+
+<!-- 弹窗：设置（背景文件 + 简历） -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2 data-i18n="settings.title">⚙️ 设置</h2>
+
+    <div class="form-group">
+      <label data-i18n="settings.bg_file">项目背景文件</label>
+      <div id="settingsBgInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.bg_none">未上传背景文件</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="settingsFileInput" accept=".pdf,.txt,.md" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsBgUploadBtn" data-i18n="settings.bg_upload">上传文件</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteBg" style="display:none" data-i18n="settings.bg_delete">删除文件</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.resume">个人简历</label>
+      <div id="settingsResumeInfo">
+        <div style="font-size:13px;color:var(--ink-4);padding:10px 0" data-i18n="settings.resume_none">未上传简历</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <input type="file" id="settingsResumeInput" accept=".pdf,.txt,.md,.docx" style="display:none" />
+        <button class="btn btn-outline btn-sm" id="settingsResumeUploadBtn" data-i18n="settings.resume_upload">上传简历</button>
+        <button class="btn btn-outline btn-sm delete-btn" id="settingsDeleteResume" style="display:none" data-i18n="settings.resume_delete">删除简历</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.persona">当前面试官</label>
+      <div id="settingsPersonaInfo" style="font-size:13px;color:var(--ink-3);padding:6px 0">
+        <span data-i18n="settings.persona_none">未选择面试官</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" id="settingsCloseBtn" data-i18n="settings.close">关闭</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

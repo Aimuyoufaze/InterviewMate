@@ -97,20 +97,24 @@ cd ..
 
 一键启动：
 
+**macOS / Linux / Git Bash on Windows:**
 ```bash
 bash start.sh
+```
+
+**Windows cmd:**
+```cmd
+start.bat
 ```
 
 看到下面这样的输出就说明成功了：
 
 ```
 🚀 启动 Interview Mate...
-📡 启动后端 (port 8000)...
-🌐 启动前端 (port 8080)...
+📡 启动服务 (port 8000)...
 
 ✅ 一切就绪！
-   前端: http://localhost:8080
-   后端: http://localhost:8000
+   打开浏览器访问: http://localhost:8000
 ```
 
 ---
@@ -118,7 +122,7 @@ bash start.sh
 ### 第 5 步：打开使用
 
 1. 打开浏览器（Chrome / Safari / Edge 都可以）
-2. 地址栏输入 `http://localhost:8080`
+2. 地址栏输入 `http://localhost:8000`
 3. 按 **回车**
 
 你会看到 Interview Mate 的界面 🎉
@@ -142,10 +146,10 @@ bash start.sh
 
 | 问题 | 解决方法 |
 |------|---------|
-| `Address already in use` | 上次没关干净，执行 `lsof -ti:8000 -ti:8080 \| xargs kill -9` 再重新启动 |
+| `Address already in use` | 上次没关干净，执行对应系统命令再重新启动：macOS/Linux: `lsof -ti:8000 \| xargs kill -9`，Windows: `netstat -ano \| findstr :8000` 找到 PID 后用 `taskkill /PID <PID> /F` |
 | `DEEPSEEK_API_KEY not set` | 忘了配置 `.env`，回到第 2 步 |
 | `command not found: python3` | 没有安装 Python，去 https://python.org 下载 |
-| 界面打不开 | 确认启动成功后有 `http://localhost:8080` 的提示，地址栏别输错了 |
+| 界面打不开 | 确认启动成功后有 `http://localhost:8000` 的提示，地址栏别输错了 |
 
 ---
 
