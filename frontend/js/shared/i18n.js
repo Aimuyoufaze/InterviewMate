@@ -77,7 +77,7 @@ const _lang = {
     'extract.alert': '🎉 已成功提取 "${name}" 的面试官画像！\n已添加到面试官列表，请重新选择。',
     'extract.no_name': '请输入导师姓名',
     'extract.fail': '❌ 提取失败: ',
-    'settings.title': '⚙️ 设置',
+    'settings.title': '📝 编辑资料',
     'settings.bg_file': '项目背景文件',
     'settings.bg_none': '未上传背景文件',
     'settings.bg_upload': '上传文件',
@@ -99,10 +99,10 @@ const _lang = {
     'onboard.title': '欢迎使用 Interview Mate',
     'onboard.desc': '是否有相关的项目背景文件？例如「金融硕士项目」「管科博士项目」等。<br/>上传后，面试官将根据你的项目背景进行针对性提问。',
     'onboard.upload_label': '上传项目背景文件（PDF / TXT）',
-    'onboard.skip_hint': '💡 也可以跳过，稍后在 ⚙️ 设置中上传',
+    'onboard.skip_hint': '💡 也可以跳过，稍后在 📝 编辑资料中上传',
     'onboard.skip': '暂时跳过',
     'onboard.confirm': '确认并开始使用',
-    'onboard.skipped': '👋 可以在设置中随时上传背景文件',
+    'onboard.skipped': '👋 可以在编辑资料中随时上传背景文件',
     'onboard.uploaded': '✅ 已上传: ',
     'feedback.title': '面试评估报告',
     'feedback.loading': '加载中...',
@@ -156,7 +156,7 @@ const _lang = {
     'nav.interview': '模拟面试',
     'nav.history': '历史记录',
     'sidebar.settings': '设置',
-    'sidebar.profile': '编辑资料',
+    'sidebar.profile': '📝 编辑资料',
     'sidebar.agent': '配置 Agent',
     'sidebar.resume_status': '简历：未上传',
     'sidebar.resume_ok': '简历：已上传',
@@ -280,7 +280,7 @@ const _lang = {
     'extract.alert': '🎉 Extracted "${name}"!\nAdded to the list. Please select them as your interviewer.',
     'extract.no_name': 'Please enter a professor name',
     'extract.fail': '❌ Extraction failed: ',
-    'settings.title': '⚙️ Settings',
+    'settings.title': '📝 Edit Profile',
     'settings.bg_file': 'Background Document',
     'settings.bg_none': 'No background document uploaded',
     'settings.bg_upload': 'Upload File',
@@ -302,10 +302,10 @@ const _lang = {
     'onboard.title': 'Welcome to Interview Mate',
     'onboard.desc': 'Do you have a background document about your target program?<br/>Upload it so the interviewer can ask more relevant questions.',
     'onboard.upload_label': 'Upload background file (PDF / TXT)',
-    'onboard.skip_hint': '💡 You can skip this and upload later in ⚙️ Settings',
+    'onboard.skip_hint': '💡 You can skip this and upload later in 📝 Edit Profile',
     'onboard.skip': 'Skip for now',
     'onboard.confirm': 'Confirm & Start',
-    'onboard.skipped': '👋 You can upload a background file in Settings anytime',
+    'onboard.skipped': '👋 You can upload a background file in Edit Profile anytime',
     'onboard.uploaded': '✅ Uploaded: ',
     'feedback.title': 'Interview Evaluation Report',
     'feedback.loading': 'Loading...',
@@ -359,7 +359,7 @@ const _lang = {
     'nav.interview': 'Mock Interview',
     'nav.history': 'History',
     'sidebar.settings': 'Settings',
-    'sidebar.profile': 'Edit Profile',
+    'sidebar.profile': '📝 Edit Profile',
     'sidebar.agent': 'Configure Agent',
     'sidebar.resume_status': 'Resume: Not uploaded',
     'sidebar.resume_ok': 'Resume: Uploaded',
@@ -449,7 +449,7 @@ function applyLanguage() {
     toggle.title = lang === 'zh' ? '切换语言' : 'Switch Language';
   }
   const settingsBtn = document.getElementById('settingsBtn');
-  if (settingsBtn) settingsBtn.title = lang === 'zh' ? '设置' : 'Settings';
+  if (settingsBtn) settingsBtn.title = lang === 'zh' ? '编辑资料' : 'Edit Profile';
 
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');

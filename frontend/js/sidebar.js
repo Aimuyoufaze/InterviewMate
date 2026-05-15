@@ -138,8 +138,15 @@ async function loadResumeStatus() {
 }
 
 function openProfileModal() {
-  document.getElementById('profileNameInput').value = state.userProfile.name || '';
-  document.getElementById('profileModal').classList.add('show');
+  if (document.getElementById('settingsModal')) {
+    openSettings();
+    return;
+  }
+  const profileNameInput = document.getElementById('profileNameInput');
+  const profileModal = document.getElementById('profileModal');
+  if (!profileNameInput || !profileModal) return;
+  profileNameInput.value = state.userProfile.name || '';
+  profileModal.classList.add('show');
   loadResumeStatus();
 }
 
