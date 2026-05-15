@@ -138,6 +138,10 @@ async function loadResumeStatus() {
 }
 
 function openProfileModal() {
+  if (document.getElementById('settingsModal')) {
+    openSettings();
+    return;
+  }
   document.getElementById('profileNameInput').value = state.userProfile.name || '';
   document.getElementById('profileModal').classList.add('show');
   loadResumeStatus();
