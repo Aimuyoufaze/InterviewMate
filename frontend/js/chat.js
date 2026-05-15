@@ -15,6 +15,8 @@ let isFirstVisit = false;
 
 async function initChat() {
   applyLanguage();
+  const chatInput = document.getElementById('chatMessageInput');
+  if (chatInput) chatInput.placeholder = t('chat.placeholder');
 
   // 检查是否首次对话
   const hasChatted = getStorage('hasChatted', false);
