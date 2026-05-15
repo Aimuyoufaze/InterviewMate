@@ -465,6 +465,9 @@ export function showFeedback(feedback) {
 
 function closeFeedback() {
   document.getElementById('feedbackModal').classList.remove('show');
+  import('./setup.js').then(mod => {
+    if (typeof mod.returnToSetup === 'function') mod.returnToSetup();
+  }).catch(err => console.warn('[closeFeedback] setup.js import failed:', err));
 }
 
 function downloadSummary() {
