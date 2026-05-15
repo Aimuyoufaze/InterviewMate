@@ -394,19 +394,10 @@ async def interview_end(req: EndRequest, _: bool = Depends(apply_api_key_overrid
     return result
 
 # ═══════════════════════════════════════════════════
-# STT — 语音转文字
+# STT — 语音转文字（仅使用百度语音识别）
 # ═══════════════════════════════════════════════════
 #
-# 支持以下模式（按优先级）：
-#
-# 1. STT_PROVIDER=baidu，或未设置 STT_PROVIDER 但配置了百度密钥
-#    → 百度语音识别（推荐国内用户）
-#    .env 需配置 BAIDU_STT_API_KEY / BAIDU_STT_SECRET_KEY
-#
-# 2. STT_API_KEY 已配置     → OpenAI 兼容的 Whisper API (Groq / OpenAI 等)
-#    .env 需配置 STT_API_KEY / STT_API_URL / STT_MODEL
-#
-# 3. 以上均未配置            → 本地 Whisper（离线可用，但首次会下载模型）
+# .env 需配置 BAIDU_STT_API_KEY / BAIDU_STT_SECRET_KEY
 
 @app.post("/api/stt/transcribe")
 async def stt_transcribe(
@@ -420,20 +411,7 @@ async def stt_transcribe(
     if not content:
         raise HTTPException(status_code=400, detail="音频文件为空")
 
-    provider = os.getenv("STT_PROVIDER", "")
-    baidu_key = os.getenv("BAIDU_STT_API_KEY", "")
-    baidu_secret = os.getenv("BAIDU_STT_SECRET_KEY", "")
-    stt_key = os.getenv("STT_API_KEY", "")
-
-    if provider == "baidu" or (not provider and baidu_key and baidu_secret):
-        # 🅰️ 百度语音识别
-        return await _baidu_stt(content)
-    elif stt_key:
-        # 🅱️ OpenAI 兼容 Whisper API
-        return await _openai_whisper_stt(content, file.filename, file.content_type)
-    else:
-        # 🅲 本地 Whisper（兜底）
-        return await _local_stt(content)
+    return await _baidu_stt(content)
 
 
 # ── Provider: 百度语音识别 ──────────────────────
@@ -457,59 +435,6 @@ async def _baidu_stt(audio_bytes: bytes) -> dict:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"百度语音识别失败: {str(e)}")
-
-
-# ── Provider: OpenAI 兼容 Whisper API ───────────
-
-async def _openai_whisper_stt(audio_bytes: bytes, filename: str, content_type: str | None) -> dict:
-    import httpx
-
-    stt_url = os.getenv("STT_API_URL", "https://api.openai.com/v1/audio/transcriptions")
-    stt_key = os.getenv("STT_API_KEY", "")
-    stt_model = os.getenv("STT_MODEL", "whisper-1")
-
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(
-                stt_url,
-                headers={"Authorization": f"Bearer {stt_key}"},
-                files={
-                    "file": (filename, audio_bytes, content_type or "audio/webm")
-                },
-                data={"model": stt_model, "language": "zh"},
-            )
-            result = resp.json()
-            if resp.status_code != 200:
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"STT API 错误 ({resp.status_code}): {result.get('error', {}).get('message', resp.text)}"
-                )
-            return {"text": result.get("text", ""), "source": "api", "language": "zh"}
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="STT API 请求超时")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"STT API 调用失败: {str(e)}")
-
-
-# ── Provider: 本地 Whisper（兜底） ──────────────
-
-async def _local_stt(audio_bytes: bytes) -> dict:
-    try:
-        from stt_local import transcribe
-        text = await transcribe(audio_bytes, language="zh")
-        return {"text": text, "source": "local", "language": "zh"}
-    except ImportError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"本地 Whisper 未安装: {e}\n请执行: pip install faster-whisper"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"本地语音转写失败: {str(e)}"
-        )
 
 
 # ═══════════════════════════════════════════════════
