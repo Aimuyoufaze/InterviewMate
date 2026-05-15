@@ -142,8 +142,11 @@ function openProfileModal() {
     openSettings();
     return;
   }
-  document.getElementById('profileNameInput').value = state.userProfile.name || '';
-  document.getElementById('profileModal').classList.add('show');
+  const profileNameInput = document.getElementById('profileNameInput');
+  const profileModal = document.getElementById('profileModal');
+  if (!profileNameInput || !profileModal) return;
+  profileNameInput.value = state.userProfile.name || '';
+  profileModal.classList.add('show');
   loadResumeStatus();
 }
 
