@@ -399,7 +399,8 @@ async def interview_end(req: EndRequest, _: bool = Depends(apply_api_key_overrid
 #
 # 支持以下模式（按优先级）：
 #
-# 1. STT_PROVIDER=baidu    → 百度语音识别（推荐国内用户）
+# 1. STT_PROVIDER=baidu，或未设置 STT_PROVIDER 但配置了百度密钥
+#    → 百度语音识别（推荐国内用户）
 #    .env 需配置 BAIDU_STT_API_KEY / BAIDU_STT_SECRET_KEY
 #
 # 2. STT_API_KEY 已配置     → OpenAI 兼容的 Whisper API (Groq / OpenAI 等)
