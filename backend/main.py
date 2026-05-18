@@ -24,7 +24,7 @@ try:
 except ImportError:
     HAS_PDFPLUMBER = False
 
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent / '.env')
 
 # ── 确保能找到同级模块 ──────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
